@@ -17,205 +17,206 @@ using System.Collections;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Security.Cryptography;
 using System.Text;
+using System.Dynamic;
 
 namespace Smartsheet.Core.Http
 {
-    public class SmartsheetHttpClient : ISmartsheetClient
-    {
-        private HttpClient _HttpClient = new HttpClient();
-        private string _AccessToken = null;
-        private string _ChangeAgent = null;
-        private static int _AttemptLimit = 10;
-        private int _WaitTime = 0;
-        private int _RetryCount = 0;
-        private bool _RetryRequest = true;
+	public class SmartsheetHttpClient : ISmartsheetClient
+	{
+		private HttpClient _HttpClient = new HttpClient();
+		private string _AccessToken = null;
+		private string _ChangeAgent = null;
+		private static int _AttemptLimit = 10;
+		private int _WaitTime = 0;
+		private int _RetryCount = 0;
+		private bool _RetryRequest = true;
 
-        public SmartsheetHttpClient(string token, string changeAgent = null)
-        {
-            this._AccessToken = token;
-            this._ChangeAgent = changeAgent;
-            this._HttpClient.BaseAddress = new Uri("https://api.smartsheet.com/2.0/");
-            this._HttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-            this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + this._AccessToken);
-        }
+		public SmartsheetHttpClient(string token, string changeAgent = null)
+		{
+			this._AccessToken = token;
+			this._ChangeAgent = changeAgent;
+			this._HttpClient.BaseAddress = new Uri("https://api.smartsheet.com/2.0/");
+			this._HttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+			this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + this._AccessToken);
+		}
 
-        //
-        //  Request Logic
-        #region SmartsheetHttpClient Request Logic
-        public async Task<TResult> ExecuteRequest<TResult, T>(HttpVerb verb, string url, T data)
-        {
-            this.ValidateRequestInjectedResult(typeof(TResult));
+		//
+		//  Request Logic
+		#region SmartsheetHttpClient Request Logic
+		public async Task<TResult> ExecuteRequest<TResult, T>(HttpVerb verb, string url, T data)
+		{
+			this.ValidateRequestInjectedResult(typeof(TResult));
 
-            //this.ValidateRequestInjectedType(typeof(T));
+			//this.ValidateRequestInjectedType(typeof(T));
 
-            this.ValidateClientParameters();
+			this.ValidateClientParameters();
 
-            this.InitiazeNewRequest();
+			this.InitiazeNewRequest();
 
-            while (_RetryRequest && (_RetryCount < _AttemptLimit))
-            {
-                try
-                {
-                    if (_WaitTime > 0)
-                    {
-                        Thread.Sleep(_WaitTime);
-                    }
+			while (_RetryRequest && (_RetryCount < _AttemptLimit))
+			{
+				try
+				{
+					if (_WaitTime > 0)
+					{
+						Thread.Sleep(_WaitTime);
+					}
 
-                    HttpResponseMessage response;
+					HttpResponseMessage response;
 
-                    var serializerSettings = new JsonSerializerSettings()
-                    {
-                        NullValueHandling = NullValueHandling.Ignore,
-                        ContractResolver = new CamelCasePropertyNamesContractResolver()
-                    };
+					var serializerSettings = new JsonSerializerSettings()
+					{
+						NullValueHandling = NullValueHandling.Ignore,
+						ContractResolver = new CamelCasePropertyNamesContractResolver()
+					};
 
-                    var serializedData = JsonConvert.SerializeObject(data, Formatting.None, serializerSettings);
+					var serializedData = JsonConvert.SerializeObject(data, Formatting.None, serializerSettings);
 
-                    switch (verb)
-                    {
-                        default:
-                        case HttpVerb.GET:
-                            response = await this._HttpClient.GetAsync(url);
-                            break;
-                        case HttpVerb.PUT:
-                            response = await this._HttpClient.PutAsync(url, new StringContent(serializedData, System.Text.Encoding.UTF8, "application/json"));
-                            break;
-                        case HttpVerb.POST:
-                            response = await this._HttpClient.PostAsync(url, new StringContent(serializedData, System.Text.Encoding.UTF8, "application/json"));
-                            break;
-                        case HttpVerb.DELETE:
-                            response = await this._HttpClient.DeleteAsync(url);
-                            break;
-                    }
+					switch (verb)
+					{
+						default:
+						case HttpVerb.GET:
+							response = await this._HttpClient.GetAsync(url);
+							break;
+						case HttpVerb.PUT:
+							response = await this._HttpClient.PutAsync(url, new StringContent(serializedData, System.Text.Encoding.UTF8, "application/json"));
+							break;
+						case HttpVerb.POST:
+							response = await this._HttpClient.PostAsync(url, new StringContent(serializedData, System.Text.Encoding.UTF8, "application/json"));
+							break;
+						case HttpVerb.DELETE:
+							response = await this._HttpClient.DeleteAsync(url);
+							break;
+					}
 
-                    var statusCode = response.StatusCode;
+					var statusCode = response.StatusCode;
 
-                    if (statusCode == HttpStatusCode.OK)
-                    {
-                        try
-                        {
-                            var responseBody = await response.Content.ReadAsStringAsync();
+					if (statusCode == HttpStatusCode.OK)
+					{
+						try
+						{
+							var responseBody = await response.Content.ReadAsStringAsync();
 
-                            var jsonReponseBody = JsonConvert.DeserializeObject(responseBody).ToString();
+							var jsonReponseBody = JsonConvert.DeserializeObject(responseBody).ToString();
 
-                            var resultResponse = JsonConvert.DeserializeObject<TResult>(jsonReponseBody);
+							var resultResponse = JsonConvert.DeserializeObject<TResult>(jsonReponseBody);
 
-                            return resultResponse;
-                        }
-                        catch (Exception e)
-                        {
-                            throw;
-                        }
-                    }
+							return resultResponse;
+						}
+						catch (Exception e)
+						{
+							throw;
+						}
+					}
 
-                    if (statusCode.Equals(HttpStatusCode.InternalServerError) || statusCode.Equals(HttpStatusCode.ServiceUnavailable) || statusCode.Equals((HttpStatusCode)429)) // .NET doesn't have a const for this
-                    {
-                        var responseJson = await response.Content.ReadAsStringAsync();
+					if (statusCode.Equals(HttpStatusCode.InternalServerError) || statusCode.Equals(HttpStatusCode.ServiceUnavailable) || statusCode.Equals((HttpStatusCode)429)) // .NET doesn't have a const for this
+					{
+						var responseJson = await response.Content.ReadAsStringAsync();
 
-                        dynamic result = JsonConvert.DeserializeObject(responseJson);
+						dynamic result = JsonConvert.DeserializeObject(responseJson);
 
-                        // did we hit an error that we should retry?
-                        int code = result["errorCode"];
+						// did we hit an error that we should retry?
+						int code = result["errorCode"];
 
-                        if (code == 4001)
-                        {
-                            // service may be down temporarily
-                            _WaitTime = Backoff(_WaitTime, 60 * 1000);
-                        }
-                        else if (code == 4002 || code == 4004)
-                        {
-                            // internal error or simultaneous update.
-                            _WaitTime = Backoff(_WaitTime, 1 * 1000);
-                        }
-                        else if (code == 4003)
-                        {
-                            // rate limit
-                            _WaitTime = Backoff(_WaitTime, 2 * 1000);
-                        }
-                    }
-                    else
-                    {
-                        _RetryRequest = false;
-                        dynamic result;
-                        try
-                        {
-                            var responseJson = await response.Content.ReadAsStringAsync();
+						if (code == 4001)
+						{
+							// service may be down temporarily
+							_WaitTime = Backoff(_WaitTime, 60 * 1000);
+						}
+						else if (code == 4002 || code == 4004)
+						{
+							// internal error or simultaneous update.
+							_WaitTime = Backoff(_WaitTime, 1 * 1000);
+						}
+						else if (code == 4003)
+						{
+							// rate limit
+							_WaitTime = Backoff(_WaitTime, 2 * 1000);
+						}
+					}
+					else
+					{
+						_RetryRequest = false;
+						dynamic result;
+						try
+						{
+							var responseJson = await response.Content.ReadAsStringAsync();
 
-                            result = JsonConvert.DeserializeObject(responseJson);
-                        }
-                        catch (Exception)
-                        {
-                            throw new Exception(string.Format("HTTP Error {0}: url:[{1}]", statusCode, url));
-                        }
+							result = JsonConvert.DeserializeObject(responseJson);
+						}
+						catch (Exception)
+						{
+							throw new Exception(string.Format("HTTP Error {0}: url:[{1}]", statusCode, url));
+						}
 
-                        var message = string.Format("Smartsheet error code {0}: {1} url:[{2}]", result["errorCode"], result["message"], url);
+						var message = string.Format("Smartsheet error code {0}: {1} url:[{2}]", result["errorCode"], result["message"], url);
 
-                        throw new Exception(message);
-                    }
-                }
-                catch (Exception e)
-                {
-                    if (!_RetryRequest)
-                    {
-                        throw e;
-                    }
-                }
+						throw new Exception(message);
+					}
+				}
+				catch (Exception e)
+				{
+					if (!_RetryRequest)
+					{
+						throw e;
+					}
+				}
 
-                _RetryCount += 1;
-            }
+				_RetryCount += 1;
+			}
 
-            throw new Exception(string.Format("Retries exceeded.  url:[{0}]", url));
-        }
+			throw new Exception(string.Format("Retries exceeded.  url:[{0}]", url));
+		}
 
-        private static int Backoff(int current, int min_wait)
-        {
-            if (current > 0)
-            {
-                return current * 2;
-            }
-            return min_wait;
-        }
+		private static int Backoff(int current, int min_wait)
+		{
+			if (current > 0)
+			{
+				return current * 2;
+			}
+			return min_wait;
+		}
 
-        private void ValidateRequestInjectedResult(Type type)
-        {
-            if (!type.GetTypeInfo().ImplementedInterfaces.Contains(typeof(ISmartsheetResult)))
-            {
-                throw new Exception("Injected type must implement interface ISmartsheetResult");
-            }
-        }
+		private void ValidateRequestInjectedResult(Type type)
+		{
+			if (!type.GetTypeInfo().ImplementedInterfaces.Contains(typeof(ISmartsheetResult)))
+			{
+				throw new Exception("Injected type must implement interface ISmartsheetResult");
+			}
+		}
 
-        private void ValidateRequestInjectedType(Type type)
-        {
-            if (typeof(IEnumerable).IsAssignableFrom(type))
-            {
-                if (type.GetGenericArguments()[0] != typeof(ISmartsheetObject))
-                {
-                    throw new Exception("Injected type must implement interface ISmartsheetObject");
-                }
-            }
-            else
-            {
-                if (!type.GetTypeInfo().ImplementedInterfaces.Contains(typeof(ISmartsheetObject)))
-                {
-                    throw new Exception("Injected type must implement interface ISmartsheetObject");
-                }
-            }
-        }
+		private void ValidateRequestInjectedType(Type type)
+		{
+			if (typeof(IEnumerable).IsAssignableFrom(type))
+			{
+				if (type.GetGenericArguments()[0] != typeof(ISmartsheetObject))
+				{
+					throw new Exception("Injected type must implement interface ISmartsheetObject");
+				}
+			}
+			else
+			{
+				if (!type.GetTypeInfo().ImplementedInterfaces.Contains(typeof(ISmartsheetObject)))
+				{
+					throw new Exception("Injected type must implement interface ISmartsheetObject");
+				}
+			}
+		}
 
-        private void ValidateClientParameters()
-        {
-            if (this._AccessToken == null || string.IsNullOrWhiteSpace(this._AccessToken))
-            {
-                throw new ArgumentException("Access Token must be provided");
-            }
-        }
+		private void ValidateClientParameters()
+		{
+			if (this._AccessToken == null || string.IsNullOrWhiteSpace(this._AccessToken))
+			{
+				throw new ArgumentException("Access Token must be provided");
+			}
+		}
 
-        private void InitiazeNewRequest()
-        {
-            this._WaitTime = 0;
-            this._RetryCount = 0;
-            this._RetryRequest = true;
-        }
+		private void InitiazeNewRequest()
+		{
+			this._WaitTime = 0;
+			this._RetryCount = 0;
+			this._RetryRequest = true;
+		}
 		#endregion
 
 		//
@@ -237,7 +238,7 @@ namespace Smartsheet.Core.Http
 			};
 
 			var uri = QueryHelpers.AddQueryString(url, paramaters);
-			           
+
 			var response = await this._HttpClient.GetAsync(uri);
 
 			return response;
@@ -266,118 +267,118 @@ namespace Smartsheet.Core.Http
 		}
 
 
-        #endregion
+		#endregion
 
-        //
-        //  Workspaces
-        #region Workspaces
+		//
+		//  Workspaces
+		#region Workspaces
 
-        public async Task<ISmartsheetObject> CreateWorkspace(string workspaceName)
-        {
-            if (string.IsNullOrWhiteSpace(workspaceName))
-            {
-                throw new Exception("Workspace Name cannot be null or blank");
-            }
+		public async Task<ISmartsheetObject> CreateWorkspace(string workspaceName)
+		{
+			if (string.IsNullOrWhiteSpace(workspaceName))
+			{
+				throw new Exception("Workspace Name cannot be null or blank");
+			}
 
-            var workspace = new Workspace(workspaceName);
+			var workspace = new Workspace(workspaceName);
 
-            var response = await this.ExecuteRequest<ResultResponse<Workspace>, Workspace>(HttpVerb.POST, string.Format("workspaces"), workspace);
+			var response = await this.ExecuteRequest<ResultResponse<Workspace>, Workspace>(HttpVerb.POST, string.Format("workspaces"), workspace);
 
-            return response.Result;
-        }
+			return response.Result;
+		}
 
-        public async Task<ISmartsheetObject> GetWorkspaceById(long? workspaceId)
-        {
-            if (workspaceId == null)
-            {
-                throw new Exception("Workspace ID cannot be null");
-            }
+		public async Task<ISmartsheetObject> GetWorkspaceById(long? workspaceId)
+		{
+			if (workspaceId == null)
+			{
+				throw new Exception("Workspace ID cannot be null");
+			}
 
-            var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
+			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
 
-            return response;
-        }
+			return response;
+		}
 
-        #endregion
+		#endregion
 
-        //
-        //  Sheets
-        #region Sheets
-        public async Task<Sheet> CreateSheet(string sheetName, IEnumerable<Column> columns, string folderId = null, string workspaceId = null)
-        {
-            if (string.IsNullOrWhiteSpace(sheetName))
-            {
-                throw new Exception("Sheet Name cannot be null or blank");
-            }
+		//
+		//  Sheets
+		#region Sheets
+		public async Task<Sheet> CreateSheet(string sheetName, IEnumerable<Column> columns, string folderId = null, string workspaceId = null)
+		{
+			if (string.IsNullOrWhiteSpace(sheetName))
+			{
+				throw new Exception("Sheet Name cannot be null or blank");
+			}
 
-            var sheet = new Sheet(sheetName, columns.ToList());
+			var sheet = new Sheet(sheetName, columns.ToList());
 
-            var response = await this.ExecuteRequest<ResultResponse<Sheet> ,Sheet>(HttpVerb.POST, string.Format("sheets"), sheet);
+			var response = await this.ExecuteRequest<ResultResponse<Sheet>, Sheet>(HttpVerb.POST, string.Format("sheets"), sheet);
 
-            response.Result._Client = this;
+			response.Result._Client = this;
 
-            return response.Result;
-        }
+			return response.Result;
+		}
 
-        public async Task<Sheet> GetSheetById(long? sheetId)
-        {
-            if (sheetId == null)
-            {
-                throw new Exception("Sheet ID cannot be null");
-            }
+		public async Task<Sheet> GetSheetById(long? sheetId)
+		{
+			if (sheetId == null)
+			{
+				throw new Exception("Sheet ID cannot be null");
+			}
 
-            var response = await this.ExecuteRequest<Sheet, Sheet>(HttpVerb.GET, string.Format("sheets/{0}", sheetId), null);
+			var response = await this.ExecuteRequest<Sheet, Sheet>(HttpVerb.GET, string.Format("sheets/{0}", sheetId), null);
 
-            response._Client = this;
+			response._Client = this;
 
-            return response;
-        }
+			return response;
+		}
 
-        public async Task<IEnumerable<Sheet>> GetSheetsForWorkspace(long? workspaceId)
-        {
-            if (workspaceId == null)
-            {
-                throw new Exception("Workspace ID cannot be null");
-            }
+		public async Task<IEnumerable<Sheet>> GetSheetsForWorkspace(long? workspaceId)
+		{
+			if (workspaceId == null)
+			{
+				throw new Exception("Workspace ID cannot be null");
+			}
 
-            var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
+			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
 
-            response.Sheets.FirstOrDefault()._Client = this;
+			response.Sheets.FirstOrDefault()._Client = this;
 
-            return response.Sheets;
-        }
-        #endregion
+			return response.Sheets;
+		}
+		#endregion
 
-        //
-        //  Rows
-        #region Rows
-        public async Task<IEnumerable<Row>> CreateRows(long? sheetId, IEnumerable<Row> rows, bool? toTop = null, bool? toBottom = null, long? parentId = null, long? siblingId = null)
-        {
-            if (sheetId == null)
-            {
-                throw new Exception("Sheet ID cannot be null");
-            }
+		//
+		//  Rows
+		#region Rows
+		public async Task<IEnumerable<Row>> CreateRows(long? sheetId, IEnumerable<Row> rows, bool? toTop = null, bool? toBottom = null, long? parentId = null, long? siblingId = null)
+		{
+			if (sheetId == null)
+			{
+				throw new Exception("Sheet ID cannot be null");
+			}
 
-            if (rows.Count() > 1)
-            {
-                foreach(var row in rows)
-                {
-                    row.ToTop = toTop;
-                    row.ToBottom = toBottom;
-                    row.ParentId = parentId;
-                    row.SiblingId = siblingId;
+			if (rows.Count() > 1)
+			{
+				foreach (var row in rows)
+				{
+					row.ToTop = toTop;
+					row.ToBottom = toBottom;
+					row.ParentId = parentId;
+					row.SiblingId = siblingId;
 
-                    foreach(var cell in row.Cells)
-                    {
-                        cell.Build();
-                    }
-                }
-            }
+					foreach (var cell in row.Cells)
+					{
+						cell.Build();
+					}
+				}
+			}
 
-            var response = await this.ExecuteRequest<ResultResponse<IEnumerable<Row>>, IEnumerable<Row>>(HttpVerb.POST, string.Format("sheets/{0}/rows", sheetId), rows);
+			var response = await this.ExecuteRequest<ResultResponse<IEnumerable<Row>>, IEnumerable<Row>>(HttpVerb.POST, string.Format("sheets/{0}/rows", sheetId), rows);
 
-            return response.Result;
-        }
+			return response.Result;
+		}
 
 		public async Task<CopyOrMoveRowResult> MoveRows(long? sourceSheetId, long? destinationSheetId, IEnumerable<long> rowIds)
 		{
@@ -391,14 +392,14 @@ namespace Smartsheet.Core.Http
 				throw new Exception("Destination Sheet ID cannot be null");
 			}
 
-            var copyOrMoveRowDirective = new CopyOrMoveRowDirective()
-            {
-                To = new CopyOrMoveRowDestination()
-                {
-                    SheetId = destinationSheetId
-                },
-                RowIds = rowIds.ToList()
-            };
+			var copyOrMoveRowDirective = new CopyOrMoveRowDirective()
+			{
+				To = new CopyOrMoveRowDestination()
+				{
+					SheetId = destinationSheetId
+				},
+				RowIds = rowIds.ToList()
+			};
 
 			var response = await this.ExecuteRequest<CopyOrMoveRowResult, CopyOrMoveRowDirective>(HttpVerb.POST, string.Format("sheets/{0}/rows/move?include=attachments,discussions", sourceSheetId), copyOrMoveRowDirective);
 
@@ -430,99 +431,137 @@ namespace Smartsheet.Core.Http
 
 			return response;
 		}
-        #endregion
+		#endregion
 
-        //
-        //  Folders
-        #region Folders
+		//
+		//  Folders
+		#region Folders
 
-        public async Task<IEnumerable<ISmartsheetObject>> GetFoldersForWorkspace(long? workspaceId)
-        {
-            if (workspaceId == null)
-            {
-                throw new Exception("Workspace ID cannot be null");
-            }
+		public async Task<IEnumerable<ISmartsheetObject>> GetFoldersForWorkspace(long? workspaceId)
+		{
+			if (workspaceId == null)
+			{
+				throw new Exception("Workspace ID cannot be null");
+			}
 
-            var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
+			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
 
-            return response.Folders;
-        }
+			return response.Folders;
+		}
 
-        #endregion
+		#endregion
 
-        //
-        //  Reports
-        #region Reports
-        public async Task<IEnumerable<ISmartsheetObject>> GetReportsForWorkspace(long? workspaceId)
-        {
-            if (workspaceId == null)
-            {
-                throw new Exception("Workspace ID cannot be null");
-            }
+		//
+		//  Reports
+		#region Reports
+		public async Task<IEnumerable<ISmartsheetObject>> GetReportsForWorkspace(long? workspaceId)
+		{
+			if (workspaceId == null)
+			{
+				throw new Exception("Workspace ID cannot be null");
+			}
 
-            var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
+			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
 
-            return response.Reports;
-        }
-        #endregion
+			return response.Reports;
+		}
+		#endregion
 
-        //
-        //  Templates
-        #region Templates
-        public async Task<IEnumerable<ISmartsheetObject>> GetTemplatesForWorkspace(long? workspaceId)
-        {
-            if (workspaceId == null)
-            {
-                throw new Exception("Workspace ID cannot be null");
-            }
+		//
+		//  Templates
+		#region Templates
+		public async Task<IEnumerable<ISmartsheetObject>> GetTemplatesForWorkspace(long? workspaceId)
+		{
+			if (workspaceId == null)
+			{
+				throw new Exception("Workspace ID cannot be null");
+			}
 
-            var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
+			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
 
-            return response.Templates;
-        }
-        #endregion
+			return response.Templates;
+		}
+		#endregion
 
-        //
-        //  Update Requests
-        #region Update Requests
-        public async Task<UpdateRequest> CreateUpdateRequest(long? sheetId, IEnumerable<long> rowIds, IEnumerable<Recipient> sendTo, IEnumerable<long> columnIds, string subject = null, string message = null, bool ccMe = false, bool includeDiscussions = true, bool includeAttachments = true)
-        {
-            if (sheetId == null)
-            {
-                throw new Exception("Sheet ID cannot be null");
-            }
+		//
+		//  Update Requests
+		#region Update Requests
+		public async Task<UpdateRequest> CreateUpdateRequest(long? sheetId, IEnumerable<long> rowIds, IEnumerable<Recipient> sendTo, IEnumerable<long> columnIds, string subject = null, string message = null, bool ccMe = false, bool includeDiscussions = true, bool includeAttachments = true)
+		{
+			if (sheetId == null)
+			{
+				throw new Exception("Sheet ID cannot be null");
+			}
 
-            if (rowIds.Count() == 0)
-            {
-                throw new Exception("Must specifiy 1 or more rows to update");
-            }
+			if (rowIds.Count() == 0)
+			{
+				throw new Exception("Must specifiy 1 or more rows to update");
+			}
 
-            if (sendTo.Count() == 0)
-            {
-                throw new Exception("Must specifiy 1 or more recipients");
-            }
+			if (sendTo.Count() == 0)
+			{
+				throw new Exception("Must specifiy 1 or more recipients");
+			}
 
-            var request = new UpdateRequest()
-            {
-                SendTo = sendTo.ToList(),
-                Subject = subject,
-                Message = message,
-                CcMe = ccMe,
-                RowIds = rowIds.ToList(),
-                ColumnIds = columnIds.ToList(),
-                IncludeAttachments = includeAttachments,
-                IncludeDiscussions = includeDiscussions
-            };
+			var request = new UpdateRequest()
+			{
+				SendTo = sendTo.ToList(),
+				Subject = subject,
+				Message = message,
+				CcMe = ccMe,
+				RowIds = rowIds.ToList(),
+				ColumnIds = columnIds.ToList(),
+				IncludeAttachments = includeAttachments,
+				IncludeDiscussions = includeDiscussions
+			};
 
-            var result = await this.ExecuteRequest<ResultResponse<UpdateRequest>, UpdateRequest>(HttpVerb.POST, string.Format("sheets/{0}/updaterequests", sheetId), request);
+			var result = await this.ExecuteRequest<ResultResponse<UpdateRequest>, UpdateRequest>(HttpVerb.POST, string.Format("sheets/{0}/updaterequests", sheetId), request);
 
-            return result.Result;
-        }
+			return result.Result;
+		}
 
-        public async Task<UpdateRequest> CreateUpdateRequests()
-        {
-            return null;
-        }
-        #endregion
-    }
+		public Task<UpdateRequest> CreateUpdateRequests()
+		{
+			throw new NotImplementedException();
+		}
+		#endregion
+
+
+		//
+		//	Webhooks
+		#region
+		public async Task<IEnumerable<Webhook>> GetWebhooksForUser()
+		{
+			var result = await this.ExecuteRequest<IndexResultResponse<Webhook>, Webhook>(HttpVerb.GET, "webhooks", null);
+
+			return result.Data;
+		}
+
+		public async Task<Webhook> GetWebhook(long? webhookId)
+		{
+			if (webhookId == null)
+			{
+				throw new Exception("Webhook ID cannot be null");
+			}
+
+			var result = await this.ExecuteRequest<Webhook, Webhook>(HttpVerb.GET, string.Format("webhooks/{0}", webhookId), null);
+
+			return result;
+		}
+
+		public async Task<Webhook> CreateWebhook(Webhook model)
+		{
+			var result = await this.ExecuteRequest<ResultResponse<Webhook>, Webhook>(HttpVerb.POST, "webhooks", model);
+
+			return result.Result;
+		}
+
+		public async Task<Webhook> UpdateWebhook(long? webhookId, Webhook model)
+		{
+			var result = await this.ExecuteRequest<ResultResponse<Webhook>, Webhook>(HttpVerb.PUT, string.Format("webhooks/{0}", webhookId), model);
+
+			return result.Result;
+		}
+		#endregion
+	}
 }

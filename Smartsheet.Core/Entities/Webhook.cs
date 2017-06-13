@@ -40,7 +40,7 @@ namespace Smartsheet.Core
 		public string DisabledDetails { get; set; }
 		public long? Version { get; set; }
 		public WebhookStats Stats { get; set; }
-		public DateTime CreatedAt { get; set; }
-		public DateTime ModifiedAt { get; set; }
+		public DateTime? CreatedAt { get; set; }
+		public DateTime? ModifiedAt { get; set; }
 	}
 }
