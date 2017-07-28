@@ -109,14 +109,14 @@ namespace Smartsheet.Core.Entities
 
 		public Cell GetCellForColumn(string columnTitle)
 		{
-			var cell = this.Cells.Where(c => c.Column.Title.Trim() == columnTitle).FirstOrDefault();
+			var cell = this.Cells.Where(c => c.Column.Title.Trim().ToLower() == columnTitle.ToLower()).FirstOrDefault();
 
 			return cell;
 		}
 
 		public void UpdateCellForColumn(string columnTitle, dynamic value)
 		{
-			var cell = this.Cells.Where(c => c.Column.Title.Trim() == columnTitle).FirstOrDefault();
+			var cell = this.Cells.Where(c => c.Column.Title.Trim().ToLower() == columnTitle.ToLower()).FirstOrDefault();
 			cell.Value = value;
 		}
 		#endregion
