@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using System.Security.Cryptography;
 using System.Text;
 using System.Dynamic;
+using System.Net.Http.Headers;
 
 namespace Smartsheet.Core.Http
 {
@@ -37,17 +38,23 @@ namespace Smartsheet.Core.Http
 			this._ChangeAgent = changeAgent;
 			this._HttpClient.BaseAddress = new Uri("https://api.smartsheet.com/2.0/");
 			this._HttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-			this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + this._AccessToken);
 		}
 
 		//
 		//  Request Logic
 		#region SmartsheetHttpClient Request Logic
-		public async Task<TResult> ExecuteRequest<TResult, T>(HttpVerb verb, string url, T data)
+		public async Task<TResult> ExecuteRequest<TResult, T>(HttpVerb verb, string url, T data, bool secure = true)
 		{
 			this.ValidateRequestInjectedResult(typeof(TResult));
 
 			//this.ValidateRequestInjectedType(typeof(T));
+
+			this._HttpClient.DefaultRequestHeaders.Remove("Authorization");
+
+			if (secure == true)
+			{
+				this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + this._AccessToken);
+			}
 
 			this.ValidateClientParameters();
 
@@ -105,7 +112,7 @@ namespace Smartsheet.Core.Http
 						}
 						catch (Exception e)
 						{
-							throw;
+							throw e;
 						}
 					}
 
@@ -261,7 +268,47 @@ namespace Smartsheet.Core.Http
 				new KeyValuePair<string, string>("hash", hash)
 			});
 
+			content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+
 			var response = await this._HttpClient.PostAsync(url, content);
+
+			return response;
+		}
+
+		public async Task<HttpResponseMessage> RefreshAccessToken(string url, string refreshToken, string clientId, string clientSecret, string redirectUri = "")
+		{
+			if (string.IsNullOrWhiteSpace(refreshToken))
+			{
+				throw new Exception("Provided Smartsheet Refresh Token cannot be null");
+			}
+
+			var hash = SHA.GenerateSHA256String(clientSecret + "|" + refreshToken);
+
+			var content = new FormUrlEncodedContent(new[]
+			{
+				new KeyValuePair<string, string>("grant_type", "refresh_token"),
+				new KeyValuePair<string, string>("client_id", clientId),
+				new KeyValuePair<string, string>("code", refreshToken),
+				new KeyValuePair<string, string>("hash", hash)
+			});
+
+			content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+
+			var response = await this._HttpClient.PostAsync(url, content);
+
+			return response;
+		}
+
+		public async Task<HttpResponseMessage> GetCurrentUserInformation(string url, string accessToken)
+		{
+			if (string.IsNullOrWhiteSpace(accessToken))
+			{
+				throw new Exception("Provided Smartsheet Access Token cannot be null");
+			}
+
+			this._HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+			var response = await this._HttpClient.GetAsync(url);
 
 			return response;
 		}
@@ -606,6 +653,22 @@ namespace Smartsheet.Core.Http
 		public async Task<Webhook> UpdateWebhook(long? webhookId, Webhook model)
 		{
 			var result = await this.ExecuteRequest<ResultResponse<Webhook>, Webhook>(HttpVerb.PUT, string.Format("webhooks/{0}", webhookId), model);
+
+			return result.Result;
+		}
+		#endregion
+
+		//
+		//	Columns
+		#region Columns
+		public async Task<Column> EditColumn(long? sheetId, long? columnId, Column model)
+		{
+			if (columnId == null)
+			{
+				throw new Exception("Column ID cannot be null");
+			}
+
+			var result = await this.ExecuteRequest<ResultResponse<Column>, Column>(HttpVerb.PUT, string.Format("sheets/{0}/columns/{1}", sheetId, columnId), model);
 
 			return result.Result;
 		}

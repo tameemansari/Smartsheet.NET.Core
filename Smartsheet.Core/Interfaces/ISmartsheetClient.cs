@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Smartsheet.Core.Interfaces
 {
-    public interface ISmartsheetClient
-    {
-        Task<TResult> ExecuteRequest<TResult, T>(HttpVerb verb, string url, T data);
-    }
+	public interface ISmartsheetClient
+	{
+		Task<TResult> ExecuteRequest<TResult, T>(HttpVerb verb, string url, T data, bool secure = true);
+	}
 }
