@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿﻿using Newtonsoft.Json;
 using Smartsheet.Core.Definitions;
 using Smartsheet.Core.Entities;
 using ProfessionalServices.Core.Interfaces;
@@ -431,7 +431,7 @@ namespace Smartsheet.Core.Http
 
 			string includeString = "";
 
-			if (includes.Count() > 0)
+			if (includes != null && includes.Count() > 0)
 			{
 				includeString += string.Format("?include={0}", string.Join(",", includes.Select(i => i.ToString())));
 			}
