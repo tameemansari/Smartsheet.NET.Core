@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Smartsheet.Core.Definitions;
 using Smartsheet.Core.Entities;
 using ProfessionalServices.Core.Interfaces;
 using System;
@@ -350,6 +351,46 @@ namespace Smartsheet.Core.Http
 				response = await this.ExecuteRequest<ResultResponse<Sheet>, Sheet>(HttpVerb.POST, string.Format("workspaces/{0}/sheets", workspaceId), sheet);
 			}
 
+			response.Result._Client = this;
+
+			return response.Result;
+		}
+
+		public async Task<Sheet> CopySheet(string newName, long? sourceSheetId, long? destinationId, DestinationType destinationType, IEnumerable<SheetCopyInclusion> includes)
+		{
+			if (string.IsNullOrWhiteSpace(newName))
+			{
+				throw new Exception("New sheet name cannot be null or blank");
+			}
+
+			if (sourceSheetId == null)
+			{
+				throw new Exception("Source sheet ID cannot be null or blank");
+			}
+
+			if (destinationId == null)
+			{
+				throw new Exception("Destination ID cannot be null or blank");
+			}
+
+			var response = new ResultResponse<Sheet>();
+
+			ContainerDestination container = new ContainerDestination()
+			{
+				DestinationId = destinationId.Value,
+				DestinationType = destinationType.ToString(),
+				NewName = newName
+			};
+
+			string includeString = "";
+
+			if (includes.Count() > 0)
+			{
+				includeString += string.Format("?include={0}", string.Join(",", includes.Select(i => i.ToString())));
+			}
+
+			response = await this.ExecuteRequest<ResultResponse<Sheet>, ContainerDestination>(HttpVerb.POST, string.Format("sheets/{0}/copy{1}", sourceSheetId, includeString), container);
+				
 			response.Result._Client = this;
 
 			return response.Result;
