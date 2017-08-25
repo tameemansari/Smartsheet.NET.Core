@@ -12,6 +12,31 @@ namespace Smartsheet.Core.Entities
 			this.Columns = new List<Column>();
 		}
 
+        public Row Build(bool strict)
+        {
+			this.RowNumber = null;
+			this.CreatedAt = null;
+			this.ModifiedAt = null;
+			this.LockedForUser = null;
+			this.Columns = null;
+			this.Discussions = null;
+			this.Attatchments = null;
+
+			var buildCells = new List<Cell>();
+
+			for (var i = 0; i < this.Cells.Count; i++)
+			{
+				if (this.Cells[i].Value != null)
+				{
+					buildCells.Add(this.Cells[i].Build(strict));
+				}
+			}
+
+			this.Cells = buildCells;
+
+			return this;
+        }
+
 		public Row Build(
 			bool toTop,
 			bool preserveId = false,

@@ -57,6 +57,11 @@ namespace Smartsheet.Core.Http
 				this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + this._AccessToken);
 			}
 
+            if (this._ChangeAgent != null)
+            {
+                this._HttpClient.DefaultRequestHeaders.Add("Smartsheet-Change-Agent", this._ChangeAgent);
+            }
+
 			this.ValidateClientParameters();
 
 			this.InitiazeNewRequest();
