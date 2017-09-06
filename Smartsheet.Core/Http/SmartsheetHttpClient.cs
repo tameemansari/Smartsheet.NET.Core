@@ -1,4 +1,4 @@
-﻿﻿using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Smartsheet.Core.Definitions;
 using Smartsheet.Core.Entities;
 using ProfessionalServices.Core.Interfaces;
@@ -23,7 +23,7 @@ using System.Net.Http.Headers;
 
 namespace Smartsheet.Core.Http
 {
-	public class SmartsheetHttpClient : ISmartsheetClient
+	public class SmartsheetHttpClient : ISmartsheetHttpClient
 	{
 		private HttpClient _HttpClient = new HttpClient();
 		private string _AccessToken = null;
@@ -437,7 +437,7 @@ namespace Smartsheet.Core.Http
 			}
 
 			response = await this.ExecuteRequest<ResultResponse<Sheet>, ContainerDestination>(HttpVerb.POST, string.Format("sheets/{0}/copy{1}", sourceSheetId, includeString), container);
-				
+
 			response.Result._Client = this;
 
 			return response.Result;

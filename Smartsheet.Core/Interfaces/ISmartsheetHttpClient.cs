@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Smartsheet.Core.Interfaces
 {
-	public interface ISmartsheetClient
+	public interface ISmartsheetHttpClient
 	{
 		Task<TResult> ExecuteRequest<TResult, T>(HttpVerb verb, string url, T data, bool secure = true);
 	}

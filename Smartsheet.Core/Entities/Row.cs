@@ -12,30 +12,13 @@ namespace Smartsheet.Core.Entities
 			this.Columns = new List<Column>();
 		}
 
-		public Row Build(
-			bool toTop,
-			bool preserveId = false,
-			IList<Cell> cells = null)
+		public Row Build(bool toTop = false, bool strict = false, bool preserveId = false, IList<Cell> cells = null)
 		{
-			if (!preserveId)
+			if (toTop == true)
 			{
-				this.Id = null;
+				this.ToTop = ToTop;
 			}
 
-			this.RowNumber = null;
-			this.CreatedAt = null;
-			this.ModifiedAt = null;
-			this.LockedForUser = null;
-			this.Cells = cells;
-			this.Columns = null;
-			this.Discussions = null;
-			this.Attatchments = null;
-
-			return this;
-		}
-
-		public Row Build(bool toTop, bool strict = false, bool preserveId = false)
-		{
 			if (!preserveId)
 			{
 				this.Id = null;
@@ -48,6 +31,11 @@ namespace Smartsheet.Core.Entities
 			this.Columns = null;
 			this.Discussions = null;
 			this.Attatchments = null;
+
+			if (cells != null && cells.Any())
+			{
+				this.Cells = cells;
+			}
 
 			var buildCells = new List<Cell>();
 
