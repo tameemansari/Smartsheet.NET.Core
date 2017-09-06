@@ -20,6 +20,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Dynamic;
 using System.Net.Http.Headers;
+using Microsoft.Extensions.Options;
+using Smartsheet.Core.Configuration;
 
 namespace Smartsheet.Core.Http
 {
@@ -33,18 +35,52 @@ namespace Smartsheet.Core.Http
 		private int _RetryCount = 0;
 		private bool _RetryRequest = true;
 
-		public SmartsheetHttpClient(string token, string changeAgent = null)
+		public SmartsheetHttpClient(IOptions<ApplicationSettings> options)
 		{
-			this._AccessToken = token;
-			this._ChangeAgent = changeAgent;
-			this._HttpClient.BaseAddress = new Uri("https://api.smartsheet.com/2.0/");
-			this._HttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+			this._AccessToken = options.Value.SmartsheetCredentials.AccessToken;
+			this._ChangeAgent = options.Value.SmartsheetCredentials.ChangeAgent;
+			this.InitializeHttpClient();
 		}
 
-		//
-		//  Request Logic
-		#region SmartsheetHttpClient Request Logic
-		public async Task<TResult> ExecuteRequest<TResult, T>(HttpVerb verb, string url, T data, bool secure = true)
+        public SmartsheetHttpClient(string accessToken, string changeAgent)
+        {
+			this._AccessToken = accessToken;
+			this._ChangeAgent = changeAgent;
+            this.InitializeHttpClient();
+        }
+
+        /// <summary>
+        /// Set the base address, and default request headers
+        /// for the Http client prior to sending a request.
+        /// </summary>
+        private void InitializeHttpClient()
+        {
+			this._HttpClient.BaseAddress = new Uri("https://api.smartsheet.com/2.0/");
+			this._HttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+        }
+
+        /// <summary>
+        /// Sets the authorization header.
+        /// </summary>
+        /// <param name="accessToken">Access token.</param>
+        public void SetAuthorizationHeader(string accessToken)
+        {
+			this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
+		}
+
+        /// <summary>
+        /// Executes any, and all requests against the Smartsheet API. Additionally,
+        /// handles all retry logic and serialization / deserialization of 
+        /// requests / responses.
+        /// </summary>
+        /// <returns>The request.</returns>
+        /// <param name="verb">Verb.</param>
+        /// <param name="url">URL.</param>
+        /// <param name="data">Data.</param>
+        /// <param name="secure">If set to <c>true</c> secure.</param>
+        /// <typeparam name="TResult">The 1st type parameter.</typeparam>
+        /// <typeparam name="T">The 2nd type parameter.</typeparam>
+        public async Task<TResult> ExecuteRequest<TResult, T>(HttpVerb verb, string url, T data, string accessToken = null)
 		{
 			this.ValidateRequestInjectedResult(typeof(TResult));
 
@@ -52,10 +88,14 @@ namespace Smartsheet.Core.Http
 
 			this._HttpClient.DefaultRequestHeaders.Remove("Authorization");
 
-			if (secure == true)
+			if (accessToken != null)
 			{
-				this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + this._AccessToken);
+				this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
 			}
+            else 
+            {
+                this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + this._AccessToken);
+            }
 
             if (this._ChangeAgent != null)
             {
@@ -230,7 +270,6 @@ namespace Smartsheet.Core.Http
 			this._RetryCount = 0;
 			this._RetryRequest = true;
 		}
-		#endregion
 
 		//
 		//  Authorization
@@ -318,8 +357,6 @@ namespace Smartsheet.Core.Http
 
 			return response;
 		}
-
-
 		#endregion
 
 		//
@@ -448,14 +485,14 @@ namespace Smartsheet.Core.Http
 			return response.Result;
 		}
 
-		public async Task<Sheet> GetSheetById(long? sheetId)
+		public async Task<Sheet> GetSheetById(long? sheetId, string accessToken = null)
 		{
 			if (sheetId == null)
 			{
 				throw new Exception("Sheet ID cannot be null");
 			}
 
-			var response = await this.ExecuteRequest<Sheet, Sheet>(HttpVerb.GET, string.Format("sheets/{0}", sheetId), null);
+			var response = await this.ExecuteRequest<Sheet, Sheet>(HttpVerb.GET, string.Format("sheets/{0}", sheetId), null, accessToken);
 
 			response._Client = this;
 
