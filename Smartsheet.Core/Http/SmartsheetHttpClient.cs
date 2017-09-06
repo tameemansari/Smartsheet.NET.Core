@@ -16,9 +16,6 @@ using Smartsheet.Core.Interfaces;
 using Smartsheet.Core.Responses;
 using System.Collections;
 using Microsoft.AspNetCore.WebUtilities;
-using System.Security.Cryptography;
-using System.Text;
-using System.Dynamic;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Options;
 using Smartsheet.Core.Configuration;
@@ -42,45 +39,45 @@ namespace Smartsheet.Core.Http
 			this.InitializeHttpClient();
 		}
 
-        public SmartsheetHttpClient(string accessToken, string changeAgent)
-        {
+		public SmartsheetHttpClient(string accessToken, string changeAgent)
+		{
 			this._AccessToken = accessToken;
 			this._ChangeAgent = changeAgent;
-            this.InitializeHttpClient();
-        }
+			this.InitializeHttpClient();
+		}
 
-        /// <summary>
-        /// Set the base address, and default request headers
-        /// for the Http client prior to sending a request.
-        /// </summary>
-        private void InitializeHttpClient()
-        {
+		/// <summary>
+		/// Set the base address, and default request headers
+		/// for the Http client prior to sending a request.
+		/// </summary>
+		private void InitializeHttpClient()
+		{
 			this._HttpClient.BaseAddress = new Uri("https://api.smartsheet.com/2.0/");
 			this._HttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-        }
+		}
 
-        /// <summary>
-        /// Sets the authorization header.
-        /// </summary>
-        /// <param name="accessToken">Access token.</param>
-        public void SetAuthorizationHeader(string accessToken)
-        {
+		/// <summary>
+		/// Sets the authorization header.
+		/// </summary>
+		/// <param name="accessToken">Access token.</param>
+		public void SetAuthorizationHeader(string accessToken)
+		{
 			this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
 		}
 
-        /// <summary>
-        /// Executes any, and all requests against the Smartsheet API. Additionally,
-        /// handles all retry logic and serialization / deserialization of 
-        /// requests / responses.
-        /// </summary>
-        /// <returns>The request.</returns>
-        /// <param name="verb">Verb.</param>
-        /// <param name="url">URL.</param>
-        /// <param name="data">Data.</param>
-        /// <param name="secure">If set to <c>true</c> secure.</param>
-        /// <typeparam name="TResult">The 1st type parameter.</typeparam>
-        /// <typeparam name="T">The 2nd type parameter.</typeparam>
-        public async Task<TResult> ExecuteRequest<TResult, T>(HttpVerb verb, string url, T data, string accessToken = null)
+		/// <summary>
+		/// Executes any, and all requests against the Smartsheet API. Additionally,
+		/// handles all retry logic and serialization / deserialization of 
+		/// requests / responses.
+		/// </summary>
+		/// <returns>The request.</returns>
+		/// <param name="verb">Verb.</param>
+		/// <param name="url">URL.</param>
+		/// <param name="data">Data.</param>
+		/// <param name="secure">If set to <c>true</c> secure.</param>
+		/// <typeparam name="TResult">The 1st type parameter.</typeparam>
+		/// <typeparam name="T">The 2nd type parameter.</typeparam>
+		public async Task<TResult> ExecuteRequest<TResult, T>(HttpVerb verb, string url, T data, string accessToken = null)
 		{
 			this.ValidateRequestInjectedResult(typeof(TResult));
 
@@ -92,15 +89,15 @@ namespace Smartsheet.Core.Http
 			{
 				this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
 			}
-            else 
-            {
-                this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + this._AccessToken);
-            }
+			else
+			{
+				this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + this._AccessToken);
+			}
 
-            if (this._ChangeAgent != null)
-            {
-                this._HttpClient.DefaultRequestHeaders.Add("Smartsheet-Change-Agent", this._ChangeAgent);
-            }
+			if (this._ChangeAgent != null)
+			{
+				this._HttpClient.DefaultRequestHeaders.Add("Smartsheet-Change-Agent", this._ChangeAgent);
+			}
 
 			this.ValidateClientParameters();
 
@@ -221,15 +218,26 @@ namespace Smartsheet.Core.Http
 			throw new Exception(string.Format("Retries exceeded.  url:[{0}]", url));
 		}
 
-		private static int Backoff(int current, int min_wait)
+		/// <summary>
+		/// Backoff the specified current and minimumWait.
+		/// </summary>
+		/// <returns>The backoff.</returns>
+		/// <param name="current">Current.</param>
+		/// <param name="minimumWait">Minimum wait.</param>
+		private static int Backoff(int current, int minimumWait)
 		{
 			if (current > 0)
 			{
 				return current * 2;
 			}
-			return min_wait;
+
+			return minimumWait;
 		}
 
+		/// <summary>
+		/// Validates the request injected result.
+		/// </summary>
+		/// <param name="type">Type.</param>
 		private void ValidateRequestInjectedResult(Type type)
 		{
 			if (!type.GetTypeInfo().ImplementedInterfaces.Contains(typeof(ISmartsheetResult)))
@@ -238,6 +246,10 @@ namespace Smartsheet.Core.Http
 			}
 		}
 
+		/// <summary>
+		/// Validates the type of the request injected.
+		/// </summary>
+		/// <param name="type">Type.</param>
 		private void ValidateRequestInjectedType(Type type)
 		{
 			if (typeof(IEnumerable).IsAssignableFrom(type))
@@ -256,6 +268,9 @@ namespace Smartsheet.Core.Http
 			}
 		}
 
+		/// <summary>
+		/// Validates the client parameters.
+		/// </summary>
 		private void ValidateClientParameters()
 		{
 			if (this._AccessToken == null || string.IsNullOrWhiteSpace(this._AccessToken))
@@ -264,6 +279,9 @@ namespace Smartsheet.Core.Http
 			}
 		}
 
+		/// <summary>
+		/// Initiazes the new request.
+		/// </summary>
 		private void InitiazeNewRequest()
 		{
 			this._WaitTime = 0;
@@ -362,8 +380,7 @@ namespace Smartsheet.Core.Http
 		//
 		//  Workspaces
 		#region Workspaces
-
-		public async Task<ISmartsheetObject> CreateWorkspace(string workspaceName)
+		public async Task<ISmartsheetObject> CreateWorkspace(string workspaceName, string accessToken = null)
 		{
 			if (string.IsNullOrWhiteSpace(workspaceName))
 			{
@@ -372,19 +389,19 @@ namespace Smartsheet.Core.Http
 
 			var workspace = new Workspace(workspaceName);
 
-			var response = await this.ExecuteRequest<ResultResponse<Workspace>, Workspace>(HttpVerb.POST, string.Format("workspaces"), workspace);
+			var response = await this.ExecuteRequest<ResultResponse<Workspace>, Workspace>(HttpVerb.POST, string.Format("workspaces"), workspace, accessToken: accessToken);
 
 			return response.Result;
 		}
 
-		public async Task<ISmartsheetObject> GetWorkspaceById(long? workspaceId)
+		public async Task<ISmartsheetObject> GetWorkspaceById(long? workspaceId, string accessToken = null)
 		{
 			if (workspaceId == null)
 			{
 				throw new Exception("Workspace ID cannot be null");
 			}
 
-			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
+			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null, accessToken: accessToken);
 
 			return response;
 		}
@@ -394,7 +411,7 @@ namespace Smartsheet.Core.Http
 		//
 		//  Sheets
 		#region Sheets
-		public async Task<Sheet> CreateSheet(string sheetName, IEnumerable<Column> columns, string folderId = null, string workspaceId = null)
+		public async Task<Sheet> CreateSheet(string sheetName, IEnumerable<Column> columns, string folderId = null, string workspaceId = null, string accessToken = null)
 		{
 			if (string.IsNullOrWhiteSpace(sheetName))
 			{
@@ -403,14 +420,14 @@ namespace Smartsheet.Core.Http
 
 			var sheet = new Sheet(sheetName, columns.ToList());
 
-			var response = await this.ExecuteRequest<ResultResponse<Sheet>, Sheet>(HttpVerb.POST, string.Format("sheets"), sheet);
+			var response = await this.ExecuteRequest<ResultResponse<Sheet>, Sheet>(HttpVerb.POST, string.Format("sheets"), sheet, accessToken: accessToken);
 
 			response.Result._Client = this;
 
 			return response.Result;
 		}
 
-		public async Task<Sheet> CreateSheetFromTemplate(string sheetName, long? templateId, long? folderId = null, long? workspaceId = null)
+		public async Task<Sheet> CreateSheetFromTemplate(string sheetName, long? templateId, long? folderId = null, long? workspaceId = null, string accessToken = null)
 		{
 			if (string.IsNullOrWhiteSpace(sheetName))
 			{
@@ -429,15 +446,15 @@ namespace Smartsheet.Core.Http
 
 			if (folderId == null && workspaceId == null)
 			{
-				response = await this.ExecuteRequest<ResultResponse<Sheet>, Sheet>(HttpVerb.POST, string.Format("sheets"), sheet);
+				response = await this.ExecuteRequest<ResultResponse<Sheet>, Sheet>(HttpVerb.POST, string.Format("sheets"), sheet, accessToken: accessToken);
 			}
 			else if (folderId != null && workspaceId == null) // Folders
 			{
-				response = await this.ExecuteRequest<ResultResponse<Sheet>, Sheet>(HttpVerb.POST, string.Format("folders/{0}/sheets?include=data", folderId), sheet);
+				response = await this.ExecuteRequest<ResultResponse<Sheet>, Sheet>(HttpVerb.POST, string.Format("folders/{0}/sheets?include=data", folderId), sheet, accessToken: accessToken);
 			}
 			else if (folderId == null && workspaceId != null) // Folders
 			{
-				response = await this.ExecuteRequest<ResultResponse<Sheet>, Sheet>(HttpVerb.POST, string.Format("workspaces/{0}/sheets", workspaceId), sheet);
+				response = await this.ExecuteRequest<ResultResponse<Sheet>, Sheet>(HttpVerb.POST, string.Format("workspaces/{0}/sheets", workspaceId), sheet, accessToken: accessToken);
 			}
 
 			response.Result._Client = this;
@@ -445,7 +462,7 @@ namespace Smartsheet.Core.Http
 			return response.Result;
 		}
 
-		public async Task<Sheet> CopySheet(string newName, long? sourceSheetId, long? destinationId, DestinationType destinationType, IEnumerable<SheetCopyInclusion> includes)
+		public async Task<Sheet> CopySheet(string newName, long? sourceSheetId, long? destinationId, DestinationType destinationType, IEnumerable<SheetCopyInclusion> includes, string accessToken = null)
 		{
 			if (string.IsNullOrWhiteSpace(newName))
 			{
@@ -478,7 +495,7 @@ namespace Smartsheet.Core.Http
 				includeString += string.Format("?include={0}", string.Join(",", includes.Select(i => i.ToString())));
 			}
 
-			response = await this.ExecuteRequest<ResultResponse<Sheet>, ContainerDestination>(HttpVerb.POST, string.Format("sheets/{0}/copy{1}", sourceSheetId, includeString), container);
+			response = await this.ExecuteRequest<ResultResponse<Sheet>, ContainerDestination>(HttpVerb.POST, string.Format("sheets/{0}/copy{1}", sourceSheetId, includeString), container, accessToken: accessToken);
 
 			response.Result._Client = this;
 
@@ -492,21 +509,21 @@ namespace Smartsheet.Core.Http
 				throw new Exception("Sheet ID cannot be null");
 			}
 
-			var response = await this.ExecuteRequest<Sheet, Sheet>(HttpVerb.GET, string.Format("sheets/{0}", sheetId), null, accessToken);
+			var response = await this.ExecuteRequest<Sheet, Sheet>(HttpVerb.GET, string.Format("sheets/{0}", sheetId), null, accessToken: accessToken);
 
 			response._Client = this;
 
 			return response;
 		}
 
-		public async Task<IEnumerable<Sheet>> GetSheetsForWorkspace(long? workspaceId)
+		public async Task<IEnumerable<Sheet>> GetSheetsForWorkspace(long? workspaceId, string accessToken = null)
 		{
 			if (workspaceId == null)
 			{
 				throw new Exception("Workspace ID cannot be null");
 			}
 
-			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
+			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null, accessToken: accessToken);
 
 			response.Sheets.FirstOrDefault()._Client = this;
 
@@ -517,7 +534,7 @@ namespace Smartsheet.Core.Http
 		//
 		//  Rows
 		#region Rows
-		public async Task<IEnumerable<Row>> CreateRows(long? sheetId, IEnumerable<Row> rows, bool? toTop = null, bool? toBottom = null, long? parentId = null, long? siblingId = null)
+		public async Task<IEnumerable<Row>> CreateRows(long? sheetId, IEnumerable<Row> rows, bool? toTop = null, bool? toBottom = null, long? parentId = null, long? siblingId = null, string accessToken = null)
 		{
 			if (sheetId == null)
 			{
@@ -540,12 +557,12 @@ namespace Smartsheet.Core.Http
 				}
 			}
 
-			var response = await this.ExecuteRequest<ResultResponse<IEnumerable<Row>>, IEnumerable<Row>>(HttpVerb.POST, string.Format("sheets/{0}/rows", sheetId), rows);
+			var response = await this.ExecuteRequest<ResultResponse<IEnumerable<Row>>, IEnumerable<Row>>(HttpVerb.POST, string.Format("sheets/{0}/rows", sheetId), rows, accessToken: accessToken);
 
 			return response.Result;
 		}
 
-		public async Task<CopyOrMoveRowResult> MoveRows(long? sourceSheetId, long? destinationSheetId, IEnumerable<long> rowIds)
+		public async Task<CopyOrMoveRowResult> MoveRows(long? sourceSheetId, long? destinationSheetId, IEnumerable<long> rowIds, string accessToken = null)
 		{
 			if (sourceSheetId == null)
 			{
@@ -566,12 +583,12 @@ namespace Smartsheet.Core.Http
 				RowIds = rowIds.ToList()
 			};
 
-			var response = await this.ExecuteRequest<CopyOrMoveRowResult, CopyOrMoveRowDirective>(HttpVerb.POST, string.Format("sheets/{0}/rows/move?include=attachments,discussions", sourceSheetId), copyOrMoveRowDirective);
+			var response = await this.ExecuteRequest<CopyOrMoveRowResult, CopyOrMoveRowDirective>(HttpVerb.POST, string.Format("sheets/{0}/rows/move?include=attachments,discussions", sourceSheetId), copyOrMoveRowDirective, accessToken: accessToken);
 
 			return response;
 		}
 
-		public async Task<CopyOrMoveRowResult> CopyRows(long? sourceSheetId, long? destinationSheetId, IEnumerable<long> rowIds)
+		public async Task<CopyOrMoveRowResult> CopyRows(long? sourceSheetId, long? destinationSheetId, IEnumerable<long> rowIds, string accessToken = null)
 		{
 			if (sourceSheetId == null)
 			{
@@ -592,7 +609,7 @@ namespace Smartsheet.Core.Http
 				RowIds = rowIds.ToList()
 			};
 
-			var response = await this.ExecuteRequest<CopyOrMoveRowResult, CopyOrMoveRowDirective>(HttpVerb.POST, string.Format("sheets/{0}/rows/copy?include=attachments,discussions", sourceSheetId), copyOrMoveRowDirective);
+			var response = await this.ExecuteRequest<CopyOrMoveRowResult, CopyOrMoveRowDirective>(HttpVerb.POST, string.Format("sheets/{0}/rows/copy?include=attachments,discussions", sourceSheetId), copyOrMoveRowDirective, accessToken: accessToken);
 
 			return response;
 		}
@@ -602,26 +619,26 @@ namespace Smartsheet.Core.Http
 		//  Folders
 		#region Folders
 
-		public async Task<IEnumerable<ISmartsheetObject>> GetFoldersForWorkspace(long? workspaceId)
+		public async Task<IEnumerable<ISmartsheetObject>> GetFoldersForWorkspace(long? workspaceId, string accessToken = null)
 		{
 			if (workspaceId == null)
 			{
 				throw new Exception("Workspace ID cannot be null");
 			}
 
-			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
+			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null, accessToken: accessToken);
 
 			return response.Folders;
 		}
 
-		public async Task<Folder> GetFolderById(long? folderId)
+		public async Task<Folder> GetFolderById(long? folderId, string accessToken = null)
 		{
 			if (folderId == null)
 			{
 				throw new Exception("Folder ID cannot be null");
 			}
 
-			var response = await this.ExecuteRequest<Folder, Folder>(HttpVerb.GET, string.Format("folders/{0}", folderId), null);
+			var response = await this.ExecuteRequest<Folder, Folder>(HttpVerb.GET, string.Format("folders/{0}", folderId), null, accessToken: accessToken);
 
 			return response;
 		}
@@ -631,14 +648,14 @@ namespace Smartsheet.Core.Http
 		//
 		//  Reports
 		#region Reports
-		public async Task<IEnumerable<ISmartsheetObject>> GetReportsForWorkspace(long? workspaceId)
+		public async Task<IEnumerable<ISmartsheetObject>> GetReportsForWorkspace(long? workspaceId, string accessToken = null)
 		{
 			if (workspaceId == null)
 			{
 				throw new Exception("Workspace ID cannot be null");
 			}
 
-			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
+			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null, accessToken: accessToken);
 
 			return response.Reports;
 		}
@@ -647,14 +664,14 @@ namespace Smartsheet.Core.Http
 		//
 		//  Templates
 		#region Templates
-		public async Task<IEnumerable<ISmartsheetObject>> GetTemplatesForWorkspace(long? workspaceId)
+		public async Task<IEnumerable<ISmartsheetObject>> GetTemplatesForWorkspace(long? workspaceId, string accessToken = null)
 		{
 			if (workspaceId == null)
 			{
 				throw new Exception("Workspace ID cannot be null");
 			}
 
-			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null);
+			var response = await this.ExecuteRequest<Workspace, Workspace>(HttpVerb.GET, string.Format("workspaces/{0}", workspaceId), null, accessToken: accessToken);
 
 			return response.Templates;
 		}
@@ -663,7 +680,7 @@ namespace Smartsheet.Core.Http
 		//
 		//  Update Requests
 		#region Update Requests
-		public async Task<UpdateRequest> CreateUpdateRequest(long? sheetId, IEnumerable<long> rowIds, IEnumerable<Recipient> sendTo, IEnumerable<long> columnIds, string subject = null, string message = null, bool ccMe = false, bool includeDiscussions = true, bool includeAttachments = true)
+		public async Task<UpdateRequest> CreateUpdateRequest(long? sheetId, IEnumerable<long> rowIds, IEnumerable<Recipient> sendTo, IEnumerable<long> columnIds, string subject = null, string message = null, bool ccMe = false, bool includeDiscussions = true, bool includeAttachments = true, string accessToken = null)
 		{
 			if (sheetId == null)
 			{
@@ -692,14 +709,9 @@ namespace Smartsheet.Core.Http
 				IncludeDiscussions = includeDiscussions
 			};
 
-			var result = await this.ExecuteRequest<ResultResponse<UpdateRequest>, UpdateRequest>(HttpVerb.POST, string.Format("sheets/{0}/updaterequests", sheetId), request);
+			var result = await this.ExecuteRequest<ResultResponse<UpdateRequest>, UpdateRequest>(HttpVerb.POST, string.Format("sheets/{0}/updaterequests", sheetId), request, accessToken: accessToken);
 
 			return result.Result;
-		}
-
-		public Task<UpdateRequest> CreateUpdateRequests()
-		{
-			throw new NotImplementedException();
 		}
 		#endregion
 
@@ -707,35 +719,35 @@ namespace Smartsheet.Core.Http
 		//
 		//	Webhooks
 		#region
-		public async Task<IEnumerable<Webhook>> GetWebhooksForUser()
+		public async Task<IEnumerable<Webhook>> GetWebhooksForUser(string accessToken = null)
 		{
-			var result = await this.ExecuteRequest<IndexResultResponse<Webhook>, Webhook>(HttpVerb.GET, "webhooks", null);
+			var result = await this.ExecuteRequest<IndexResultResponse<Webhook>, Webhook>(HttpVerb.GET, "webhooks", null, accessToken: accessToken);
 
 			return result.Data;
 		}
 
-		public async Task<Webhook> GetWebhook(long? webhookId)
+		public async Task<Webhook> GetWebhook(long? webhookId, string accessToken = null)
 		{
 			if (webhookId == null)
 			{
 				throw new Exception("Webhook ID cannot be null");
 			}
 
-			var result = await this.ExecuteRequest<Webhook, Webhook>(HttpVerb.GET, string.Format("webhooks/{0}", webhookId), null);
+			var result = await this.ExecuteRequest<Webhook, Webhook>(HttpVerb.GET, string.Format("webhooks/{0}", webhookId), null, accessToken: accessToken);
 
 			return result;
 		}
 
-		public async Task<Webhook> CreateWebhook(Webhook model)
+		public async Task<Webhook> CreateWebhook(Webhook model, string accessToken = null)
 		{
-			var result = await this.ExecuteRequest<ResultResponse<Webhook>, Webhook>(HttpVerb.POST, "webhooks", model);
+			var result = await this.ExecuteRequest<ResultResponse<Webhook>, Webhook>(HttpVerb.POST, "webhooks", model, accessToken: accessToken);
 
 			return result.Result;
 		}
 
-		public async Task<Webhook> UpdateWebhook(long? webhookId, Webhook model)
+		public async Task<Webhook> UpdateWebhook(long? webhookId, Webhook model, string accessToken = null)
 		{
-			var result = await this.ExecuteRequest<ResultResponse<Webhook>, Webhook>(HttpVerb.PUT, string.Format("webhooks/{0}", webhookId), model);
+			var result = await this.ExecuteRequest<ResultResponse<Webhook>, Webhook>(HttpVerb.PUT, string.Format("webhooks/{0}", webhookId), model, accessToken: accessToken);
 
 			return result.Result;
 		}
@@ -744,14 +756,14 @@ namespace Smartsheet.Core.Http
 		//
 		//	Columns
 		#region Columns
-		public async Task<Column> EditColumn(long? sheetId, long? columnId, Column model)
+		public async Task<Column> EditColumn(long? sheetId, long? columnId, Column model, string accessToken = null)
 		{
 			if (columnId == null)
 			{
 				throw new Exception("Column ID cannot be null");
 			}
 
-			var result = await this.ExecuteRequest<ResultResponse<Column>, Column>(HttpVerb.PUT, string.Format("sheets/{0}/columns/{1}", sheetId, columnId), model);
+			var result = await this.ExecuteRequest<ResultResponse<Column>, Column>(HttpVerb.PUT, string.Format("sheets/{0}/columns/{1}", sheetId, columnId), model, accessToken: accessToken);
 
 			return result.Result;
 		}
