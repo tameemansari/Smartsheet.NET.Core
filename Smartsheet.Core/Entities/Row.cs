@@ -12,18 +12,8 @@ namespace Smartsheet.Core.Entities
 			this.Columns = new List<Column>();
 		}
 
-		public Row Build(bool toTop = false, bool strict = false, bool preserveId = false, IList<Cell> cells = null)
+		public Row Build(bool strict, bool preserveId = false, IList<Cell> cells = null)
 		{
-			if (toTop == true)
-			{
-				this.ToTop = ToTop;
-			}
-
-			if (!preserveId)
-			{
-				this.Id = null;
-			}
-
 			this.RowNumber = null;
 			this.CreatedAt = null;
 			this.ModifiedAt = null;
@@ -31,6 +21,11 @@ namespace Smartsheet.Core.Entities
 			this.Columns = null;
 			this.Discussions = null;
 			this.Attatchments = null;
+
+			if (!preserveId)
+			{
+				this.Id = null;
+			}
 
 			if (cells != null && cells.Any())
 			{

@@ -16,6 +16,7 @@ namespace Smartsheet.Core.Entities
 		public Column Build()
 		{
 			this.Tags = null;
+            this.Options = this.Options.Count > 0 ? this.Options : null;  
 
 			return this;
 		}
