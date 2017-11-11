@@ -98,7 +98,7 @@ namespace Smartsheet.Core.Entities
 
 		public Column GetColumnByTitle(string columnTitle, bool caseSensitive = false)
 		{
-			Column column = null;
+			var column = new Column();
 
 			if (caseSensitive)
 			{
