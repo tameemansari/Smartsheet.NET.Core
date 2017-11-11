@@ -96,9 +96,18 @@ namespace Smartsheet.Core.Entities
 			return column;
 		}
 
-		public Column GetColumnByTitle(string columnTitle)
+		public Column GetColumnByTitle(string columnTitle, bool caseSensitive = false)
 		{
-			var column = this.Columns.Where(c => c.Title.Equals(columnTitle)).FirstOrDefault();
+			Column column = null;
+
+			if (caseSensitive)
+			{
+				column = this.Columns.FirstOrDefault(c => c.Title.Equals(columnTitle));
+			}
+			else
+			{
+				column = this.Columns.FirstOrDefault(c => c.Title.ToLower().Equals(columnTitle.ToLower()));
+			}
 
 			return column;
 		}
