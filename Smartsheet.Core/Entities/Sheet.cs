@@ -15,8 +15,19 @@ namespace Smartsheet.Core.Entities
 
 		}
 
+		public Sheet(long? id)
+		{
+			this.Id = id;
+		}
+
 		public Sheet(string sheetName)
 		{
+			this.Name = sheetName;
+		}
+
+		public Sheet(long? id, string sheetName)
+		{
+			this.Id = id;
 			this.Name = sheetName;
 		}
 
@@ -131,31 +142,36 @@ namespace Smartsheet.Core.Entities
 			return response.Result;
 		}
 
-		public async Task<IEnumerable<Row>> UpdateRows(IList<Row> rows, bool? toTop = null, bool? toBottom = null, bool? above = null, long? parentId = null, long? siblingId = null)
+		public async Task<IEnumerable<Row>> UpdateRows(IList<Row> rows, bool? preserveId = false, bool? strict = false, bool? toTop = null, bool? toBottom = null, bool? above = null, long? parentId = null, long? siblingId = null)
 		{
 			if (rows.Count() > 0)
 			{
+				var systemColumns = this.Columns.Where(c => c.SystemColumnType != null).Select(c => c.Id).ToList();
+
 				for (var i = 0; i < rows.Count(); i++)
 				{
+					var removeCells = new List<Cell>();
+
 					for (var x = 0; x < rows[i].Cells.Count(); x++)
 					{
-						rows[i].Cells[x].Build(false);
+						rows[i].Cells[x].Build(strict);
 
-						if (rows[i].Cells[x].Value == null)
+						if (rows[i].Cells[x].Value == null || systemColumns.Contains(rows[i].Cells[x].ColumnId))
 						{
-							rows[i].Cells.Remove(rows[i].Cells[x]);
+							removeCells.Add(rows[i].Cells[x]);
 						}
-
-						rows[i].Cells[x].Column = null;
 					}
 
-					rows[i].Build(false, true);
+					rows[i].Cells = rows[i].Cells.Except(removeCells).ToList();
 
-					rows[i].Above = above;
-					rows[i].ToTop = toTop;
-					rows[i].ToBottom = toBottom;
-					rows[i].ParentId = parentId;
-					rows[i].SiblingId = siblingId;
+					rows[i].Build(
+						preserveId: preserveId,
+						strict: strict,
+						toTop: toTop,
+						toBottom: toBottom,
+						above: above,
+						parentId: parentId,
+						siblingId: siblingId);
 				}
 			}
 

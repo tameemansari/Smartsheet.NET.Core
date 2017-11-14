@@ -12,8 +12,14 @@ namespace Smartsheet.Core.Entities
 			this.Columns = new List<Column>();
 		}
 
-		public Row Build(bool strict, bool toTop = false, bool preserveId = false, IList<Cell> cells = null)
+		public Row Build(bool? preserveId = false, bool? strict = false, bool? toTop = null, bool? toBottom = null, bool? above = null, long? parentId = null, long? siblingId = null, IList<Cell> cells = null)
 		{
+			this.ToTop = toTop;
+			this.ToBottom = toBottom;
+			this.Above = above;
+			this.ParentId = parentId;
+			this.SiblingId = siblingId;
+
 			this.RowNumber = null;
 			this.CreatedAt = null;
 			this.ModifiedAt = null;
@@ -22,12 +28,7 @@ namespace Smartsheet.Core.Entities
 			this.Discussions = null;
 			this.Attatchments = null;
 
-			if (toTop)
-			{
-				this.ToTop = true;
-			}
-
-			if (!preserveId)
+			if (!preserveId.GetValueOrDefault())
 			{
 				this.Id = null;
 			}
@@ -105,6 +106,7 @@ namespace Smartsheet.Core.Entities
 		public void UpdateCellForColumn(string columnTitle, dynamic value)
 		{
 			var cell = this.Cells.Where(c => c.Column.Title.Trim().ToLower() == columnTitle.ToLower()).FirstOrDefault();
+
 			cell.Value = value;
 		}
 		#endregion

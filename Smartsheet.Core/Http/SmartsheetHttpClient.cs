@@ -427,6 +427,20 @@ namespace Smartsheet.Core.Http
 			return response.Result;
 		}
 
+		public async Task<Sheet> UpdateSheet(long? sheetId, Sheet sheet, string accessToken = null)
+		{
+			if (sheet == null)
+			{
+				throw new Exception("Sheet cannot be null or blank");
+			}
+
+			var response = await this.ExecuteRequest<ResultResponse<Sheet>, Sheet>(HttpVerb.PUT, string.Format("sheets/{0}", sheetId), sheet, accessToken: accessToken);
+
+			response.Result._Client = this;
+
+			return response.Result;
+		}
+
 		public async Task<Sheet> CreateSheetFromTemplate(string sheetName, long? templateId, long? folderId = null, long? workspaceId = null, string accessToken = null)
 		{
 			if (string.IsNullOrWhiteSpace(sheetName))
@@ -643,6 +657,24 @@ namespace Smartsheet.Core.Http
 			return response;
 		}
 
+		public async Task<Folder> CopyFolder(long? folderId, long? destinationId, string newName, string accessToken = null)
+		{
+			if (folderId == null)
+			{
+				throw new Exception("Folder ID cannot be null");
+			}
+
+			var containerDestinationObject = new ContainerDestinationObject()
+			{
+				DestinationId = destinationId.Value,
+				DestinationType = "folder",
+				NewName = newName
+			};
+
+			var response = await this.ExecuteRequest<ResultResponse<Folder>, ContainerDestinationObject>(HttpVerb.POST, string.Format("folders/{0}/copy?include=data", folderId), containerDestinationObject, accessToken: accessToken);
+
+			return response.Result;
+		}
 		#endregion
 
 		//
