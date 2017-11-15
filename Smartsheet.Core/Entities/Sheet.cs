@@ -151,7 +151,7 @@ namespace Smartsheet.Core.Entities
 			return response.Result;
 		}
 
-		public async Task<IEnumerable<Row>> UpdateRows(IList<Row> rows, bool? preserveId = false, bool? strict = false, bool? toTop = null, bool? toBottom = null, bool? above = null, long? parentId = null, long? siblingId = null)
+		public async Task<IEnumerable<Row>> UpdateRows(IList<Row> rows, bool? strict = false, bool? toTop = null, bool? toBottom = null, bool? above = null, long? parentId = null, long? siblingId = null)
 		{
 			if (rows.Count() > 0)
 			{
@@ -174,7 +174,7 @@ namespace Smartsheet.Core.Entities
 					rows[i].Cells = rows[i].Cells.Except(removeCells).ToList();
 
 					rows[i].Build(
-						preserveId: preserveId,
+						preserveId: true,
 						strict: strict,
 						toTop: toTop,
 						toBottom: toBottom,
