@@ -22,6 +22,11 @@ namespace Smartsheet.Core.Entities
             this.Column = null;
             this.Strict = strict;
 
+            if (this.Hyperlink != null)
+            {
+                this.Hyperlink.Url = null;
+            }
+
             return this;
         }
 
