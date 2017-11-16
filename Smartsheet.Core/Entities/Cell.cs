@@ -36,5 +36,7 @@ namespace Smartsheet.Core.Entities
         public Hyperlink Hyperlink { get; set; }
 
         public Column Column { get; set; }
+
+        public CellLink CellLink { get; set; }
     }
 }
