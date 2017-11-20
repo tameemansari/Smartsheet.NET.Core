@@ -128,7 +128,7 @@ namespace Smartsheet.Core.Entities
 		//
 		//  Client Methods
 		#region SmartsheetHttpClient
-		public async Task<IEnumerable<Row>> CreateRows(IList<Row> rows, bool? toTop = null, bool? toBottom = null, long? parentId = null, long? siblingId = null)
+		public async Task<IEnumerable<Row>> CreateRows(IList<Row> rows, bool? strict = false, bool? toTop = null, bool? toBottom = null, bool? above = null, long? parentId = null, long? siblingId = null)
 		{
 			if (rows.Count() > 0)
 			{
