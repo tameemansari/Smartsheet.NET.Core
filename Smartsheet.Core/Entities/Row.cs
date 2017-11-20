@@ -103,6 +103,12 @@ namespace Smartsheet.Core.Entities
 			return cell;
 		}
 
+		public string GetValueForColumnAsString(string columnTitle)
+		{
+			var cell = this.Cells.SingleOrDefault(c => c.Column.Title.Trim().ToLower() == columnTitle.ToLower());
+			return Convert.ToString(cell?.Value ?? "");
+		}
+
 		public void UpdateCellForColumn(string columnTitle, dynamic value)
 		{
 			var cell = this.Cells.Where(c => c.Column.Title.Trim().ToLower() == columnTitle.ToLower()).FirstOrDefault();
