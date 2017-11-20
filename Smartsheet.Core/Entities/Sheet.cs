@@ -132,17 +132,32 @@ namespace Smartsheet.Core.Entities
 		{
 			if (rows.Count() > 0)
 			{
+				var systemColumns = this.Columns.Where(c => c.SystemColumnType != null).Select(c => c.Id).ToList();
+
 				for (var i = 0; i < rows.Count(); i++)
 				{
-					foreach (var cell in rows[i].Cells)
+					var removeCells = new List<Cell>();
+
+					for (var x = 0; x < rows[i].Cells.Count(); x++)
 					{
-						cell.Build();
+						rows[i].Cells[x].Build(strict);
+
+						if (rows[i].Cells[x].Value == null || systemColumns.Contains(rows[i].Cells[x].ColumnId))
+						{
+							removeCells.Add(rows[i].Cells[x]);
+						}
 					}
 
-					rows[i].ToTop = toTop;
-					rows[i].ToBottom = toBottom;
-					rows[i].ParentId = parentId;
-					rows[i].SiblingId = siblingId;
+					rows[i].Cells = rows[i].Cells.Except(removeCells).ToList();
+
+					rows[i].Build(
+						preserveId: true,
+						strict: strict,
+						toTop: toTop,
+						toBottom: toBottom,
+						above: above,
+						parentId: parentId,
+						siblingId: siblingId);
 				}
 			}
 
