@@ -9,6 +9,8 @@ using System.Net.Http;
 using ProfessionalServices.Core.Interfaces;
 using Smartsheet.Core.Definitions;
 using Smartsheet.Core.Responses;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace Smartsheet.Core.Interfaces
 {
@@ -58,5 +60,8 @@ namespace Smartsheet.Core.Interfaces
 
 		//	Columns
 		Task<Column> EditColumn(long? sheetId, long? columnId, Column model, string accessToken = null);
+
+        //  Attachments
+        Task<Attachment> UploadAttachmentToRow(long? sheetId, long? rowId, string fileName, long length, Stream data, string contentType = null, string accessToken = null);
 	}
 }
