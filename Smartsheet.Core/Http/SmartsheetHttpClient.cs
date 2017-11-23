@@ -64,7 +64,14 @@ namespace Smartsheet.Core.Http
 		/// <param name="accessToken">Access token.</param>
 		public void SetAuthorizationHeader(string accessToken)
 		{
-			this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
+			if (accessToken != null)
+			{
+				this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
+			}
+			else
+			{
+				this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + this._AccessToken);
+			}
 		}
 
 		/// <summary>
@@ -804,36 +811,46 @@ namespace Smartsheet.Core.Http
 		#endregion
 
 		#region Attachments
-		public async Task<Attachment> UploadAttachmentToRow(long? sheetId, long? rowId, string fileName, long length, Stream data, string contentType = null, string accessToken = null)
+		public async Task<Attachment> UploadAttachmentToRow(long? sheetId, long? rowId, string fileName, long length, Stream stream, string contentType = null, string accessToken = null)
 		{
-			throw new NotImplementedException();
-		}
+			this._HttpClient.DefaultRequestHeaders.Remove("Authorization");
+			this.SetAuthorizationHeader(accessToken);
 
-		public async Task<Attachment> UploadAttachmentToRow(long? sheetId, long? rowId, IFormFile formFile, string accessToken = null)
-		{
 			var url = string.Format("https://api.smartsheet.com/2.0/sheets/{0}/rows/{1}/attachments", sheetId, rowId);
-			this._HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
 
 			byte[] data;
-			using (var br = new BinaryReader(formFile.OpenReadStream()))
+			using (var br = new BinaryReader(stream))
 			{
-				data = br.ReadBytes((int)formFile.OpenReadStream().Length);
+				data = br.ReadBytes((int)stream.Length);
 			}
 
 			HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
 			request.Content = new ByteArrayContent(data);
-			request.Content.Headers.ContentType = new MediaTypeHeaderValue(formFile.ContentType);
-			request.Content.Headers.ContentLength = formFile.Length;
+			request.Content.Headers.ContentLength = length;
 			request.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
 			{
-				FileName = formFile.FileName
+				FileName = fileName
 			};
+			if (contentType != null)
+			{
+				request.Content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+			}
 
 			var response = await this._HttpClient.SendAsync(request);
 			var responseBody = await response.Content.ReadAsStringAsync();
 			var jsonResponseBody = JsonConvert.DeserializeObject(responseBody).ToString();
 			var resultResponse = JsonConvert.DeserializeObject<Attachment>(jsonResponseBody);
 			return resultResponse;
+		}
+
+		public async Task<Attachment> UploadAttachmentToRow(long? sheetId, long? rowId, IFormFile formFile, string accessToken = null)
+		{
+			using (var stream = formFile.OpenReadStream())
+			{
+				var response = await this.UploadAttachmentToRow(sheetId, rowId, formFile.FileName, formFile.Length, stream, formFile.ContentType, accessToken);
+				return response;
+			}
+
 		}
 		#endregion
 	}
