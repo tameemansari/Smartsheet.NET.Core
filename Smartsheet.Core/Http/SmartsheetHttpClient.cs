@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.WebUtilities;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Options;
 using Smartsheet.Core.Configuration;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace Smartsheet.Core.Http
 {
@@ -799,6 +801,11 @@ namespace Smartsheet.Core.Http
 
 			return result.Result;
 		}
-		#endregion
-	}
+        #endregion
+
+        public async Task<Attachment> UploadAttachmentToRow(long? sheetId, long? rowId, string fileName, long length, Stream data, string contentType = null, string accessToken = null)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

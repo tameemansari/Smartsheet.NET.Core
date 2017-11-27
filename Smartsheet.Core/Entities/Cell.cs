@@ -3,45 +3,51 @@ using ProfessionalServices.Core.Interfaces;
 
 namespace Smartsheet.Core.Entities
 {
-    public class Cell : ISmartsheetObject
-    {
-        public Cell()
-        {
-            this.Column = new Column();
-        }
+	public class Cell : ISmartsheetObject
+	{
+		public Cell()
+		{
+			this.Column = new Column();
+		}
 
-        public Cell Build()
-        {
-            this.Column = null;
+		public Cell(long? columnId, dynamic value)
+		{
+			this.ColumnId = columnId;
+			this.Value = value;
+		}
 
-            return this;
-        }
+		public Cell Build()
+		{
+			this.Column = null;
 
-        public Cell Build(bool? strict)
-        {
-            this.Column = null;
-            this.Strict = strict;
+			return this;
+		}
 
-            if (this.Hyperlink != null)
-            {
-                this.Hyperlink.Url = null;
-            }
+		public Cell Build(bool? strict)
+		{
+			this.Column = null;
+			this.Strict = strict;
 
-            return this;
-        }
+			if (this.Hyperlink != null)
+			{
+				this.Hyperlink.Url = null;
+			}
 
-        public long? ColumnId { get; set; }
+			return this;
+		}
 
-        public dynamic Value { get; set; }
+		public long? ColumnId { get; set; }
 
-        public string DisplayValue { get; set; }
+		public dynamic Value { get; set; }
 
-        public bool? Strict { get; set; }
+		public string DisplayValue { get; set; }
 
-        public Hyperlink Hyperlink { get; set; }
+		public bool? Strict { get; set; }
 
-        public Column Column { get; set; }
+		public Hyperlink Hyperlink { get; set; }
 
-        public CellLink CellLink { get; set; }
-    }
+		public Column Column { get; set; }
+
+		public CellLink CellLink { get; set; }
+	}
 }
