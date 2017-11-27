@@ -19,7 +19,6 @@ using Microsoft.AspNetCore.WebUtilities;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Options;
 using Smartsheet.Core.Configuration;
-using Microsoft.AspNetCore.Http;
 using System.IO;
 
 namespace Smartsheet.Core.Http
