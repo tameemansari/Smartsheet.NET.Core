@@ -351,7 +351,7 @@ namespace Smartsheet.Core.Http
 			{
 				new KeyValuePair<string, string>("grant_type", "refresh_token"),
 				new KeyValuePair<string, string>("client_id", clientId),
-				new KeyValuePair<string, string>("code", refreshToken),
+				new KeyValuePair<string, string>("refresh_token", refreshToken),
 				new KeyValuePair<string, string>("hash", hash)
 			});
 

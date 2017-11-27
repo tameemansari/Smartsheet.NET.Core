@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Smartsheet.Core</id>
+    <version>1.0.2</version>
+    <title>Smartsheet.Net.Core</title>
+    <authors>Austen DeWolf</authors>
+    <owners>Austen DeWolf</owners>
+    <licenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</licenseUrl>
+    <projectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</projectUrl>
+    <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Smartsheet.NET SDK targeting .NET Core</description>
+    <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
+    <copyright>Copyright 2017</copyright>
+    <tags>Smartsheet ProfessionalServices SmartsheetConsulting</tags>
+  </metadata>
+</package>
