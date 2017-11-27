@@ -60,7 +60,8 @@ namespace Smartsheet.Core.Interfaces
 		//	Columns
 		Task<Column> EditColumn(long? sheetId, long? columnId, Column model, string accessToken = null);
 
-        //  Attachments
-        Task<Attachment> UploadAttachmentToRow(long? sheetId, long? rowId, string fileName, long length, Stream data, string contentType = null, string accessToken = null);
+		//  Attachments
+		Task<Attachment> UploadAttachmentToRow(long? sheetId, long? rowId, string fileName, long length, Stream data, string contentType = null, string accessToken = null);
+		Task<Attachment> UploadAttachmentToRow(long? sheetId, long? rowId, IFormFile formFile, string accessToken = null);
 	}
 }
