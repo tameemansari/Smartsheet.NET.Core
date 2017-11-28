@@ -10,6 +10,7 @@ using ProfessionalServices.Core.Interfaces;
 using Smartsheet.Core.Definitions;
 using Smartsheet.Core.Responses;
 using System.IO;
+using Microsoft.AspNetCore.Http;
 
 namespace Smartsheet.Core.Interfaces
 {

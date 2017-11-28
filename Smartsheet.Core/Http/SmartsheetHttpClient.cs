@@ -20,6 +20,7 @@ using System.Net.Http.Headers;
 using Microsoft.Extensions.Options;
 using Smartsheet.Core.Configuration;
 using System.IO;
+using Microsoft.AspNetCore.Http;
 
 namespace Smartsheet.Core.Http
 {
