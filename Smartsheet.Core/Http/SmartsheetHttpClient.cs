@@ -27,8 +27,8 @@ namespace Smartsheet.Core.Http
 	public class SmartsheetHttpClient : ISmartsheetHttpClient
 	{
 		private HttpClient _HttpClient = new HttpClient();
-		private string _AccessToken = null;
-		private string _ChangeAgent = null;
+        public string _AccessToken { get; private set; }
+        public string _ChangeAgent { get; private set; }
 		private static int _AttemptLimit = 10;
 		private int _WaitTime = 0;
 		private int _RetryCount = 0;

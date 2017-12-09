@@ -151,7 +151,7 @@ namespace Smartsheet.Core.Entities
 					rows[i].Cells = rows[i].Cells.Except(removeCells).ToList();
 
 					rows[i].Build(
-						preserveId: true,
+						preserveId: false,
 						strict: strict,
 						toTop: toTop,
 						toBottom: toBottom,
@@ -226,6 +226,12 @@ namespace Smartsheet.Core.Entities
 
 			return response.Result;
 		}
+
+        public async Task<Sheet> Refresh() 
+        {
+            return await this._Client.GetSheetById(this.Id);
+        }
+
 		#endregion
 	}
 }
