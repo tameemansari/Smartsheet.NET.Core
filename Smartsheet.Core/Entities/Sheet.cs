@@ -128,7 +128,7 @@ namespace Smartsheet.Core.Entities
 		//
 		//  Client Methods
 		#region SmartsheetHttpClient
-		public async Task<IEnumerable<Row>> CreateRows(IList<Row> rows, bool? strict = false, bool? toTop = null, bool? toBottom = null, bool? above = null, long? parentId = null, long? siblingId = null)
+		public async Task<IEnumerable<Row>> CreateRows(IList<Row> rows, bool? strict = false, bool? toTop = null, bool? toBottom = null, bool? above = null, long? parentId = null, long? siblingId = null, string accessToken = null)
 		{
 			if (rows.Count() > 0)
 			{
@@ -161,12 +161,12 @@ namespace Smartsheet.Core.Entities
 				}
 			}
 
-			var response = await this._Client.ExecuteRequest<ResultResponse<IEnumerable<Row>>, IEnumerable<Row>>(HttpVerb.POST, string.Format("sheets/{0}/rows", this.Id), rows);
+            var response = await this._Client.ExecuteRequest<ResultResponse<IEnumerable<Row>>, IEnumerable<Row>>(HttpVerb.POST, string.Format("sheets/{0}/rows", this.Id), rows, accessToken: accessToken);
 
 			return response.Result;
 		}
 
-		public async Task<IEnumerable<Row>> UpdateRows(IList<Row> rows, bool? strict = false, bool? toTop = null, bool? toBottom = null, bool? above = null, long? parentId = null, long? siblingId = null)
+        public async Task<IEnumerable<Row>> UpdateRows(IList<Row> rows, bool? strict = false, bool? toTop = null, bool? toBottom = null, bool? above = null, long? parentId = null, long? siblingId = null, string accessToken = null)
 		{
 			if (rows.Count() > 0)
 			{
@@ -199,12 +199,12 @@ namespace Smartsheet.Core.Entities
 				}
 			}
 
-			var response = await this._Client.ExecuteRequest<ResultResponse<IEnumerable<Row>>, IEnumerable<Row>>(HttpVerb.PUT, string.Format("sheets/{0}/rows", this.Id), rows);
+            var response = await this._Client.ExecuteRequest<ResultResponse<IEnumerable<Row>>, IEnumerable<Row>>(HttpVerb.PUT, string.Format("sheets/{0}/rows", this.Id), rows, accessToken: accessToken);
 
 			return response.Result;
 		}
 
-		public async Task<IEnumerable<long>> RemoveRows(IList<Row> rows)
+        public async Task<IEnumerable<long>> RemoveRows(IList<Row> rows, string accessToken = null)
 		{
 			var rowList = rows.ToList();
 
@@ -216,7 +216,7 @@ namespace Smartsheet.Core.Entities
 
 				var url = string.Format("sheets/{0}/rows?ids={1}&ignoreRowsNotFound=true", this.Id, rowIdList);
 
-				response = await this._Client.ExecuteRequest<ResultResponse<IEnumerable<long>>, IEnumerable<Row>>(HttpVerb.DELETE, string.Format("sheets/{0}/rows?ids={1}&ignoreRowsNotFound=true", this.Id, rowIdList), null);
+                response = await this._Client.ExecuteRequest<ResultResponse<IEnumerable<long>>, IEnumerable<Row>>(HttpVerb.DELETE, string.Format("sheets/{0}/rows?ids={1}&ignoreRowsNotFound=true", this.Id, rowIdList), null, accessToken: accessToken);
 
 				if (response.Message.Equals("SUCCESS"))
 				{
