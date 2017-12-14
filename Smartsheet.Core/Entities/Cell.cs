@@ -1,8 +1,15 @@
 ﻿
+using System;
 using ProfessionalServices.Core.Interfaces;
 
 namespace Smartsheet.Core.Entities
-{
+{ 
+    public enum CellType
+    {
+        Standard,
+        Formula
+    }
+
 	public class Cell : ISmartsheetObject
 	{
 		public Cell()
@@ -10,10 +17,25 @@ namespace Smartsheet.Core.Entities
 			this.Column = new Column();
 		}
 
-		public Cell(long? columnId, dynamic value)
+		public Cell(long? columnId, dynamic value, CellType cellType = CellType.Standard)
 		{
 			this.ColumnId = columnId;
-			this.Value = value;
+
+            switch(cellType)
+            {
+                case CellType.Standard:
+                    this.Value = value;
+                    this.Formula = null;
+                    break;
+                case CellType.Formula:
+                    if (!Convert.ToString(value).Contains("="))
+                    {
+                        throw new Exception("Cannot create a formula that does not begin with '=");
+                    }
+                    this.Formula = value;
+                    this.Value = null;
+                    break;
+            }
 		}
 
 		public Cell Build()
@@ -33,6 +55,11 @@ namespace Smartsheet.Core.Entities
 				this.Hyperlink.Url = null;
 			}
 
+            if (!string.IsNullOrWhiteSpace(this.Formula))
+            {
+                this.Value = null;
+            }
+
 			return this;
 		}
 
@@ -41,6 +68,8 @@ namespace Smartsheet.Core.Entities
 		public dynamic Value { get; set; }
 
 		public string DisplayValue { get; set; }
+
+        public string Formula { get; set; }
 
 		public bool? Strict { get; set; }
 

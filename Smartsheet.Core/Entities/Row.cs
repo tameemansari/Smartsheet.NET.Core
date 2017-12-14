@@ -42,7 +42,7 @@ namespace Smartsheet.Core.Entities
 
 			for (var i = 0; i < this.Cells.Count; i++)
 			{
-				if (this.Cells[i].Value != null)
+				if (this.Cells[i].Value != null || this.Cells[i].Formula != null)
 				{
 					buildCells.Add(this.Cells[i].Build(strict));
 				}
