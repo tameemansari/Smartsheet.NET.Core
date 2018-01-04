@@ -52,6 +52,9 @@ namespace Smartsheet.Core.Interfaces
 		//	Update Requests
 		Task<UpdateRequest> CreateUpdateRequest(long? sheetId, IEnumerable<long> rowIds, IEnumerable<Recipient> sendTo, IEnumerable<long> columnIds, string subject = null, string message = null, bool ccMe = false, bool includeDiscussions = true, bool includeAttachments = true, string accessToken = null);
 
+        //  Send Rows
+        Task<MultiRowEmail> CreateSendRow(long? sheetId, MultiRowEmail email, string accessToken = null);
+
 		//	Webhooks
 		Task<IEnumerable<Webhook>> GetWebhooksForUser(string accessToken = null);
 		Task<Webhook> GetWebhook(long? webhookId, string accessToken = null);

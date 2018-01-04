@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+      <PackageId>Smartsheet.Core</PackageId>
+    <PackageVersion>2.0.1</PackageVersion>
+    <Authors>Austen DeWolf</Authors>
+    <Description>Smartsheet C# SDK to facilitate CRUD operations against the Smartsheet API (api.smartsheet.com)</Description>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReleaseNotes>Initial release. Enjoy!</PackageReleaseNotes>
+    <Copyright>Copyright 2018</Copyright>
+    <PackageTags>smartsheet professional-services</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
