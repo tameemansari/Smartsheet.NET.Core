@@ -1,14 +1,15 @@
-﻿using ProfessionalServices.Core.Interfaces;
+﻿using System.Collections.Generic;
+using ProfessionalServices.Core.Interfaces;
 
 namespace Smartsheet.Core.Entities
 {
-    public class Report : ISmartsheetObject
+    public class Report : Sheet
     {
         public Report()
         {
               
         }
 
-        public long Id { get; set; }
+        public IEnumerable<Sheet> SourceSheets { get; set; }
     }
 }
