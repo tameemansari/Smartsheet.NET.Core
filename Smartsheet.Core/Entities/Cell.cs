@@ -48,6 +48,6 @@ namespace Smartsheet.Core.Entities
 
 		public Column Column { get; set; }
 
-		public CellLink CellLink { get; set; }
+		public CellLink LinkInFromCell { get; set; }
 	}
 }
