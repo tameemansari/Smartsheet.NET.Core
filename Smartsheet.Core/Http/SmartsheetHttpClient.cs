@@ -642,6 +642,31 @@ namespace Smartsheet.Core.Http
 
             return response;
         }
+
+        public async Task<IEnumerable<Row>> LockRows(long? sheetId, bool locked, IEnumerable<long?> rowIds, string accessToken = null)
+        {
+            var rows_to_lock = new List<Dictionary<string, dynamic>>();
+
+            if (sheetId == null)
+            {
+                throw new Exception("Sheet ID cannot be null");
+            }
+
+            if (rowIds.Count() > 0)
+            {
+                foreach (var rowId in rowIds)
+                {
+                    var this_row = new Dictionary<string, dynamic>();
+                    this_row.Add("locked", locked);
+                    this_row.Add("id", rowId);
+                    rows_to_lock.Add(this_row);
+                }
+            }
+
+            var response = await this.ExecuteRequest<ResultResponse<IEnumerable<Row>>, IEnumerable<Dictionary<string, dynamic>>>(HttpVerb.PUT, string.Format("sheets/{0}/rows", sheetId), rows_to_lock, accessToken: accessToken);
+
+            return response.Result;
+        }
         #endregion
 
         #region Folders
