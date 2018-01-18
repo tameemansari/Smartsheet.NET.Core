@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using ProfessionalServices.Core.Interfaces;
 
-namespace Smartsheet.Core.Entities
+namespace Smartsheet.NET.Core.Entities
 {
     public class Template : ISmartsheetObject
     {

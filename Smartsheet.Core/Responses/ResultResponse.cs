@@ -1,5 +1,5 @@
 ﻿using ProfessionalServices.Core.Interfaces;
-using Smartsheet.Core.Interfaces;
+using Smartsheet.NET.Core.Interfaces;
 using System.Collections.Generic;
 
 namespace ProfessionalServices.Core.Responses

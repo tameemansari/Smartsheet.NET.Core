@@ -1,12 +1,12 @@
 ﻿using ProfessionalServices.Core.Interfaces;
-using Smartsheet.Core.Interfaces;
+using Smartsheet.NET.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Smartsheet.Core.Responses
+namespace Smartsheet.NET.Core.Responses
 {
 	public class IndexResultResponse<T> : ISmartsheetResult
 	{

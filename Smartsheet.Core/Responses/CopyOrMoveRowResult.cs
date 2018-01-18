@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Smartsheet.Core.Interfaces;
+using Smartsheet.NET.Core.Interfaces;
 
-namespace Smartsheet.Core.Responses
+namespace Smartsheet.NET.Core.Responses
 {
     public class CopyOrMoveRowResult : ISmartsheetResult
     {

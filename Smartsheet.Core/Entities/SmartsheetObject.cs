@@ -1,12 +1,12 @@
 ﻿using ProfessionalServices.Core.Interfaces;
-using Smartsheet.Core.Http;
+using Smartsheet.NET.Core.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Smartsheet.Core.Entities
+namespace Smartsheet.NET.Core.Entities
 {
     public class SmartsheetObject : ISmartsheetObject
     {

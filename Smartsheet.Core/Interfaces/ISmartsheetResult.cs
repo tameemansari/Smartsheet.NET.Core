@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Smartsheet.Core.Interfaces
+namespace Smartsheet.NET.Core.Interfaces
 {
     public interface ISmartsheetResult
     {

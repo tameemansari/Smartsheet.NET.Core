@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Smartsheet.Core
+namespace Smartsheet.NET.Core
 {
 	public class Webhook
 	{

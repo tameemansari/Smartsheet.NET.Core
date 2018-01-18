@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
-using Smartsheet.Core.Definitions;
-using Smartsheet.Core.Entities;
+using Smartsheet.NET.Core.Definitions;
+using Smartsheet.NET.Core.Entities;
 using ProfessionalServices.Core.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -12,17 +12,17 @@ using Newtonsoft.Json.Serialization;
 using ProfessionalServices.Core.Responses;
 using System.Threading.Tasks;
 using System.Threading;
-using Smartsheet.Core.Interfaces;
-using Smartsheet.Core.Responses;
+using Smartsheet.NET.Core.Interfaces;
+using Smartsheet.NET.Core.Responses;
 using System.Collections;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Options;
-using Smartsheet.Core.Configuration;
+using Smartsheet.NET.Core.Configuration;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 
-namespace Smartsheet.Core.Http
+namespace Smartsheet.NET.Core.Http
 {
 	public class SmartsheetHttpClient : ISmartsheetHttpClient
 	{

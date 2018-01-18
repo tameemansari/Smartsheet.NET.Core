@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Smartsheet.Core.Entities
+namespace Smartsheet.NET.Core.Entities
 {
     public class CellLink
     {

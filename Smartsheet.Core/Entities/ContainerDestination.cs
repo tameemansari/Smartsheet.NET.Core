@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Smartsheet.Core.Entities
+namespace Smartsheet.NET.Core.Entities
 {
 	public class ContainerDestination : ISmartsheetObject
 	{

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Smartsheet.Core.Responses
+namespace Smartsheet.NET.Core.Responses
 {
     public class CopyOrMoveRowDirective
     {

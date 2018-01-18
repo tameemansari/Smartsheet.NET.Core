@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Smartsheet.Core.Configuration
+namespace Smartsheet.NET.Core.Configuration
 {
 	public class SmartsheetCredentials
 	{

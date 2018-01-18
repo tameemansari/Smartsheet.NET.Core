@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Smartsheet.Core
+namespace Smartsheet.NET.Core
 {
 	public class WebhookCallback
 	{

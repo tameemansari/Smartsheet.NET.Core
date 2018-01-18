@@ -1,5 +1,5 @@
-﻿using Smartsheet.Core.Http;
-using Smartsheet.Core.Interfaces;
+﻿using Smartsheet.NET.Core.Http;
+using Smartsheet.NET.Core.Interfaces;
 
 namespace ProfessionalServices.Core.Interfaces
 {

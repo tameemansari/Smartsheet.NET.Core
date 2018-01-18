@@ -1,4 +1,4 @@
-﻿namespace Smartsheet.Core.Http
+﻿namespace Smartsheet.NET.Core.Http
 {
     public enum HttpVerb
     {

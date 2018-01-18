@@ -1,7 +1,7 @@
 ﻿using ProfessionalServices.Core.Interfaces;
 using System.Collections.Generic;
 
-namespace Smartsheet.Core.Entities
+namespace Smartsheet.NET.Core.Entities
 {
     public class Filter : ISmartsheetObject
     {
