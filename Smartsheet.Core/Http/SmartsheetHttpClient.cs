@@ -418,7 +418,6 @@ namespace Smartsheet.Core.Http
             var response = await this.ExecuteRequest<IndexResultResponse<Workspace>, Workspace>(HttpVerb.GET, string.Format("workspaces"), null, accessToken: accessToken);
             return response.Data;
         }
-
         #endregion
 
         #region Sheets
@@ -670,7 +669,6 @@ namespace Smartsheet.Core.Http
         #endregion
 
         #region Folders
-
         public async Task<IEnumerable<ISmartsheetObject>> GetFoldersForWorkspace(long? workspaceId, string accessToken = null)
         {
             if (workspaceId == null)
@@ -731,6 +729,7 @@ namespace Smartsheet.Core.Http
         public async Task<IEnumerable<Report>> ListReports(string accessToken = null)
         {
             var response = await this.ExecuteRequest<IndexResultResponse<Report>, Report>(HttpVerb.GET, string.Format("reports"), null, accessToken: accessToken);
+
             return response.Data;
         }
         #endregion
@@ -762,7 +761,6 @@ namespace Smartsheet.Core.Http
             return response.Data;
         }
         #endregion
-
 
         #region Update Requests
         public async Task<UpdateRequest> CreateUpdateRequest(long? sheetId, IEnumerable<long> rowIds, IEnumerable<Recipient> sendTo, IEnumerable<long> columnIds, string subject = null, string message = null, bool ccMe = false, bool includeDiscussions = true, bool includeAttachments = true, string accessToken = null)
@@ -922,10 +920,12 @@ namespace Smartsheet.Core.Http
 
         }
 
-        public async Task<ISmartsheetObject> AddUser(Users user, string accessToken = null)
+        public async Task<ISmartsheetObject> AddUser(User user, string accessToken = null)
         {
             this._HttpClient.DefaultRequestHeaders.Add("sendEmail", "false");
-            var response = await this.ExecuteRequest<ResultResponse<Users>, Users>(HttpVerb.POST, string.Format("users"), data: user, accessToken: accessToken);
+
+            var response = await this.ExecuteRequest<ResultResponse<User>, User>(HttpVerb.POST, string.Format("users"), data: user, accessToken: accessToken);
+
             return response.Result;
         }
 
@@ -933,27 +933,22 @@ namespace Smartsheet.Core.Http
         {
             if (transferTo == null)
             {
-                var thisURL = string.Format("users/{0}?removeFromSharing={1}",
-                                            userID, removeFromSharing);
+                var thisURL = string.Format("users/{0}?removeFromSharing={1}", userID, removeFromSharing);
 
-                var response = await this.ExecuteRequest<ResultResponse<Users>, Users>
-                (HttpVerb.DELETE, string.Format(thisURL), null, accessToken: accessToken);
+                var response = await this.ExecuteRequest<ResultResponse<User>, User>(HttpVerb.DELETE, string.Format(thisURL), null, accessToken: accessToken);
 
                 return response.Result;
             }
             else
             {
-                var thisURL = string.Format("users/{0}?transferTo={1}&removeFromSharing={2}&transferSheets={3}", 
-                                            userID, transferTo, removeFromSharing, transferSheets);
+                var thisURL = string.Format("users/{0}?transferTo={1}&removeFromSharing={2}&transferSheets={3}", userID, transferTo, removeFromSharing, transferSheets);
 
-                var response = await this.ExecuteRequest<ResultResponse<Users>, Users>
-                (HttpVerb.DELETE, string.Format(thisURL), null, accessToken: accessToken);
+                var response = await this.ExecuteRequest<ResultResponse<User>, User>(HttpVerb.DELETE, string.Format(thisURL), null, accessToken: accessToken);
 
                 return response.Result;
             }
 
         }
-
         #endregion
     }
 }
