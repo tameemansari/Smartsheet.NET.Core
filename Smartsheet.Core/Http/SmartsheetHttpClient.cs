@@ -754,13 +754,39 @@ namespace Smartsheet.NET.Core.Http
 
 			return result.Result;
 		}
-		#endregion
+        #endregion
+
+        //
+        //  Send Rows
+        #region Send Rows
+        public async Task<MultiRowEmail> CreateSendRow(long? sheetId, MultiRowEmail email, string accessToken = null)
+        {
+            if (sheetId == null)
+            {
+                throw new Exception("Sheet ID cannot be null");
+            }
+
+            if (email.RowIds.Count() == 0)
+            {
+                throw new Exception("Must specifiy 1 or more rows to update");
+            }
+
+            if (email.SendTo.Count() == 0)
+            {
+                throw new Exception("Must specifiy 1 or more recipients");
+            }
+
+            var result = await this.ExecuteRequest<ResultResponse<MultiRowEmail>, MultiRowEmail>(HttpVerb.POST, string.Format("sheets/{0}/rows/emails", sheetId), email, accessToken: accessToken);
+
+            return result.Result;
+        }
+        #endregion
 
 
-		//
-		//	Webhooks
-		#region
-		public async Task<IEnumerable<Webhook>> GetWebhooksForUser(string accessToken = null)
+        //
+        //	Webhooks
+        #region
+        public async Task<IEnumerable<Webhook>> GetWebhooksForUser(string accessToken = null)
 		{
 			var result = await this.ExecuteRequest<IndexResultResponse<Webhook>, Webhook>(HttpVerb.GET, "webhooks", null, accessToken: accessToken);
 
