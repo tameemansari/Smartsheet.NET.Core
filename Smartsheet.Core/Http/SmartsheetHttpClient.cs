@@ -34,6 +34,7 @@ namespace Smartsheet.NET.Core.Http
 		private int _RetryCount = 0;
 		private bool _RetryRequest = true;
 
+		#region Client 
 		public SmartsheetHttpClient(IOptions<ApplicationSettings> options)
 		{
 			this._AccessToken = options.Value.SmartsheetCredentials.AccessToken;
@@ -298,8 +299,9 @@ namespace Smartsheet.NET.Core.Http
 			this._RetryRequest = true;
 		}
 
-		//
-		//  Authorization
+		#endregion
+
+
 		#region Authorization
 		public async Task<HttpResponseMessage> RequestAuthorizationFromEndUser(string url, string clientId, string scopes, string state = "")
 		{
@@ -384,10 +386,10 @@ namespace Smartsheet.NET.Core.Http
 
 			return response;
 		}
+
 		#endregion
 
-		//
-		//  Workspaces
+
 		#region Workspaces
 		public async Task<ISmartsheetObject> CreateWorkspace(string workspaceName, string accessToken = null)
 		{
@@ -415,10 +417,15 @@ namespace Smartsheet.NET.Core.Http
 			return response;
 		}
 
+		public async Task<IEnumerable<Workspace>> ListWorkspaces(string accessToken = null)
+        {
+            var response = await this.ExecuteRequest<IndexResultResponse<Workspace>, Workspace>(HttpVerb.GET, string.Format("workspaces"), null, accessToken: accessToken);
+            return response.Data;
+        }
+
 		#endregion
 
-		//
-		//  Sheets
+
 		#region Sheets
 		public async Task<Sheet> CreateSheet(string sheetName, IEnumerable<Column> columns, string folderId = null, string workspaceId = null, string accessToken = null)
 		{
@@ -552,10 +559,16 @@ namespace Smartsheet.NET.Core.Http
 
 			return response.Sheets;
 		}
+
+		public async Task<IEnumerable<Sheet>> ListSheets(string accessToken = null)
+        {
+            var response = await this.ExecuteRequest<IndexResultResponse<Sheet>, Sheet>(HttpVerb.GET, string.Format("sheets"), null, accessToken: accessToken);
+            return response.Data;
+        }
+
 		#endregion
 
-		//
-		//  Rows
+
 		#region Rows
 		public async Task<IEnumerable<Row>> CreateRows(long? sheetId, IEnumerable<Row> rows, bool? toTop = null, bool? toBottom = null, long? parentId = null, long? siblingId = null, string accessToken = null)
 		{
@@ -636,12 +649,36 @@ namespace Smartsheet.NET.Core.Http
 
 			return response;
 		}
+
+		public async Task<IEnumerable<Row>> LockRows(long? sheetId, bool locked, IEnumerable<long?> rowIds, string accessToken = null)
+        {
+            var rows_to_lock = new List<Dictionary<string, dynamic>>();
+
+            if (sheetId == null)
+            {
+                throw new Exception("Sheet ID cannot be null");
+            }
+
+            if (rowIds.Count() > 0)
+            {
+                foreach (var rowId in rowIds)
+                {
+                    var this_row = new Dictionary<string, dynamic>();
+                    this_row.Add("locked", locked);
+                    this_row.Add("id", rowId);
+                    rows_to_lock.Add(this_row);
+                }
+            }
+
+            var response = await this.ExecuteRequest<ResultResponse<IEnumerable<Row>>, IEnumerable<Dictionary<string, dynamic>>>(HttpVerb.PUT, string.Format("sheets/{0}/rows", sheetId), rows_to_lock, accessToken: accessToken);
+
+            return response.Result;
+        }
+
 		#endregion
 
-		//
-		//  Folders
-		#region Folders
 
+		#region Folders
 		public async Task<IEnumerable<ISmartsheetObject>> GetFoldersForWorkspace(long? workspaceId, string accessToken = null)
 		{
 			if (workspaceId == null)
@@ -684,10 +721,10 @@ namespace Smartsheet.NET.Core.Http
 
 			return response.Result;
 		}
+
 		#endregion
 
-		//
-		//  Reports
+		
 		#region Reports
 		public async Task<IEnumerable<ISmartsheetObject>> GetReportsForWorkspace(long? workspaceId, string accessToken = null)
 		{
@@ -700,10 +737,17 @@ namespace Smartsheet.NET.Core.Http
 
 			return response.Reports;
 		}
+
+		public async Task<IEnumerable<Report>> ListReports(string accessToken = null)
+        {
+            var response = await this.ExecuteRequest<IndexResultResponse<Report>, Report>(HttpVerb.GET, string.Format("reports"), null, accessToken: accessToken);
+
+            return response.Data;
+        }
+
 		#endregion
 
-		//
-		//  Templates
+		
 		#region Templates
 		public async Task<IEnumerable<ISmartsheetObject>> GetTemplatesForWorkspace(long? workspaceId, string accessToken = null)
 		{
@@ -716,10 +760,26 @@ namespace Smartsheet.NET.Core.Http
 
 			return response.Templates;
 		}
+
+		public async Task<IEnumerable<Template>> ListTemplates(string accessToken = null)
+        {
+            var response = await this.ExecuteRequest<IndexResultResponse<Template>, Template>(HttpVerb.GET, string.Format("templates"), null, accessToken: accessToken);
+            return response.Data;
+        }
+
 		#endregion
 
-		//
-		//  Update Requests
+
+		#region Sights
+        public async Task<IEnumerable<Sight>> ListSights(string accessToken = null)
+        {
+            var response = await this.ExecuteRequest<IndexResultResponse<Sight>, Sight>(HttpVerb.GET, string.Format("sights"), null, accessToken: accessToken);
+            return response.Data;
+        }
+
+        #endregion
+
+		
 		#region Update Requests
 		public async Task<UpdateRequest> CreateUpdateRequest(long? sheetId, IEnumerable<long> rowIds, IEnumerable<Recipient> sendTo, IEnumerable<long> columnIds, string subject = null, string message = null, bool ccMe = false, bool includeDiscussions = true, bool includeAttachments = true, string accessToken = null)
 		{
@@ -754,10 +814,10 @@ namespace Smartsheet.NET.Core.Http
 
 			return result.Result;
 		}
+
         #endregion
 
-        //
-        //  Send Rows
+       
         #region Send Rows
         public async Task<MultiRowEmail> CreateSendRow(long? sheetId, MultiRowEmail email, string accessToken = null)
         {
@@ -780,12 +840,11 @@ namespace Smartsheet.NET.Core.Http
 
             return result.Result;
         }
+
         #endregion
 
 
-        //
-        //	Webhooks
-        #region
+        #region Webhooks
         public async Task<IEnumerable<Webhook>> GetWebhooksForUser(string accessToken = null)
 		{
 			var result = await this.ExecuteRequest<IndexResultResponse<Webhook>, Webhook>(HttpVerb.GET, "webhooks", null, accessToken: accessToken);
@@ -818,10 +877,10 @@ namespace Smartsheet.NET.Core.Http
 
 			return result.Result;
 		}
+
 		#endregion
 
-		//
-		//	Columns
+		
 		#region Columns
 		public async Task<Column> EditColumn(long? sheetId, long? columnId, Column model, string accessToken = null)
 		{
@@ -834,6 +893,7 @@ namespace Smartsheet.NET.Core.Http
 
 			return result.Result;
 		}
+
 		#endregion
 
 		#region Attachments
@@ -878,6 +938,69 @@ namespace Smartsheet.NET.Core.Http
 			}
 
 		}
+
 		#endregion
+
+
+		#region Users
+        public async Task<User> GetCurrentUser(string accessToken = null)
+        {
+            var response = await this.ExecuteRequest<User, User>(HttpVerb.GET, string.Format("users/me"), null, accessToken: accessToken);
+            return response;
+        }
+
+        public async Task<Home> GetHome(string accessToken = null)
+        {
+            var response = await this.ExecuteRequest<Home, Home>(HttpVerb.GET, string.Format("home"), null, accessToken: accessToken);
+            return response;
+        }
+
+        public async Task<IEnumerable<User>> ListUsers(string accessToken = null, bool includeAll = false)
+        {
+            if (includeAll)
+            {
+                var response = await this.ExecuteRequest<IndexResultResponse<User>, User>(HttpVerb.GET, string.Format("users?includeAll=true"), null, accessToken: accessToken);
+                return response.Data;
+
+            }
+            else
+            {
+                var response = await this.ExecuteRequest<IndexResultResponse<User>, User>(HttpVerb.GET, string.Format("users"), null, accessToken: accessToken);
+                return response.Data;
+            }
+
+        }
+
+        public async Task<ISmartsheetObject> AddUser(User user, string accessToken = null)
+        {
+            this._HttpClient.DefaultRequestHeaders.Add("sendEmail", "false");
+
+            var response = await this.ExecuteRequest<ResultResponse<User>, User>(HttpVerb.POST, string.Format("users"), data: user, accessToken: accessToken);
+
+            return response.Result;
+        }
+
+        public async Task<ISmartsheetObject> RemoveUser(long userID, string transferTo = null, bool transferSheets = false, bool removeFromSharing = false, string accessToken = null)
+        {
+            if (transferTo == null)
+            {
+                var thisURL = string.Format("users/{0}?removeFromSharing={1}", userID, removeFromSharing);
+
+                var response = await this.ExecuteRequest<ResultResponse<User>, User>(HttpVerb.DELETE, string.Format(thisURL), null, accessToken: accessToken);
+
+                return response.Result;
+            }
+            else
+            {
+                var thisURL = string.Format("users/{0}?transferTo={1}&removeFromSharing={2}&transferSheets={3}", userID, transferTo, removeFromSharing, transferSheets);
+
+                var response = await this.ExecuteRequest<ResultResponse<User>, User>(HttpVerb.DELETE, string.Format(thisURL), null, accessToken: accessToken);
+
+                return response.Result;
+            }
+
+        }
+
+        #endregion
 	}
 }
