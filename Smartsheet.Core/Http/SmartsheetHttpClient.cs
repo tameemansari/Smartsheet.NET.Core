@@ -1,5 +1,4 @@
-﻿//MASTER
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Smartsheet.NET.Core.Definitions;
 using Smartsheet.NET.Core.Entities;
 using ProfessionalServices.Core.Interfaces;
@@ -1001,7 +1000,7 @@ namespace Smartsheet.NET.Core.Http
             }
 
         }
-        
+
         #endregion
 	}
 }
