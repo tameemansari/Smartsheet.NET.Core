@@ -769,16 +769,6 @@ namespace Smartsheet.NET.Core.Http
 
 		#endregion
 
-
-		#region Sights
-        public async Task<IEnumerable<Sight>> ListSights(string accessToken = null)
-        {
-            var response = await this.ExecuteRequest<IndexResultResponse<Sight>, Sight>(HttpVerb.GET, string.Format("sights"), null, accessToken: accessToken);
-            return response.Data;
-        }
-
-        #endregion
-
 		
 		#region Update Requests
 		public async Task<UpdateRequest> CreateUpdateRequest(long? sheetId, IEnumerable<long> rowIds, IEnumerable<Recipient> sendTo, IEnumerable<long> columnIds, string subject = null, string message = null, bool ccMe = false, bool includeDiscussions = true, bool includeAttachments = true, string accessToken = null)
@@ -946,12 +936,6 @@ namespace Smartsheet.NET.Core.Http
         public async Task<User> GetCurrentUser(string accessToken = null)
         {
             var response = await this.ExecuteRequest<User, User>(HttpVerb.GET, string.Format("users/me"), null, accessToken: accessToken);
-            return response;
-        }
-
-        public async Task<Home> GetHome(string accessToken = null)
-        {
-            var response = await this.ExecuteRequest<Home, Home>(HttpVerb.GET, string.Format("home"), null, accessToken: accessToken);
             return response;
         }
 
